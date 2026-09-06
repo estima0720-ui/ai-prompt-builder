@@ -30,165 +30,225 @@ function generateSystemRules(userName) {
 }
 
 // ==========================================
-// 全自動組織パイプライン プロンプト
+// 🎨 Canva画像生成：多層コンポジット ライブラリ
+// （推奨ピクセルサイズ ＆ 最適用途を完全網羅）
 // ==========================================
-const allInOnePipelinePrompt = `あなたは自律型AI組織の「統括ディレクター」です。
-ユーザーから入力された【対象・テーマ・依頼内容】に対し、内部で以下の【3大部門・6大専門機能】を順次実行し、厳格な監査を通過した完成成果物を出力してください。
-
-【内部実行パイプライン】
-1. 🏛️【経営企画室】：論点整理・要件定義・代案策定
-2. 📢【制作・マーケティング部】：PREP形式での高密度執筆・表記統一
-3. 🛡️【品質管理・法務情報管理部】：裏取り（事実確認）・出典管理・伏せ字（機密保護）・反対視点検証・停止（リスク判定）
-
-【出力フォーマット】
-■ 1. 企画・論点整理（要件とターゲット定義）
-■ 2. 最終完成稿（制作部執筆 ➔ 品質・法務監査による推敲済み完成版）
-■ 3. 品質・法務情報管理 監査レポート
-  ・公開判定：【 GO（問題なし） / WARNING（要確認あり） / STOP（公開不可） 】
-  ・裏取り・出典確認結果
-  ・法的リスク・炎上防止コメント`;
-
-// ==========================================
-// プリセットプロンプト データ
-// ==========================================
-const initialPromptData = {
-  single_s: [
-    { label: "前提から疑って考えて（思い込み排除）", desc: "固定観念を根底から崩し、ゼロベースで客観検証させます。", prompt: "前提から疑って考えて", x: 85, y: 15 },
-    { label: "見落としている変数を挙げて（盲点発見）", desc: "思考の枠組みから抜け落ちている未知の要因・隠れたパラメータを洗い出します。", prompt: "見落としている変数を挙げて", x: 90, y: 20 },
-    { label: "反対側の立場から批判して（壁打ち強化）", desc: "対立する立場や競合の視点から徹底的な反論と批判を展開させます。", prompt: "反対側の立場から批判して", x: 80, y: 25 },
-    { label: "この結論が間違うケースを探して（検証強化）", desc: "提示した結論や仮説が破綻するエッジケース・例外状況を網羅します。", prompt: "この結論が間違うケースを探して", x: 88, y: 18 },
-    { label: "別の仮説を3つ作って（視野拡張）", desc: "単一の思い込みを排し、異なるアプローチの仮説を3本提示させます。", prompt: "別の仮説を3つ作って", x: 82, y: 22 },
-    { label: "80点として不足分を埋めて（改善モード）", desc: "現状の案をベースラインとし、100点に到達するための具体的補強要素を出力します。", prompt: "80点として不足分を埋めて", x: 75, y: 30 },
-    { label: "専門家ならどこを疑うか（深掘り）", desc: "第一線のプロ・監査役の視点で、論理の甘さやデータ不備を突かせます。", prompt: "専門家ならどこを疑うか", x: 86, y: 28 },
-    { label: "最適解と次善策を両方出して（意思決定）", desc: "理想のベストシナリオと、リスクヘッジ用のセカンドベストを比較提示させます。", prompt: "最適解と次善策を両方出して", x: 78, y: 35 },
-    { label: "判断基準そのものを作って（再利用可能）", desc: "個別判断にとどまらず、今後も使える汎用的な評価スコアリング基準を策定します。", prompt: "判断基準そのものを作って", x: 70, y: 30 },
-    { label: "この作業用の最強プロンプトを作って（プロンプト生成）", desc: "該当タスクを最高精度で自動化する専用プロンプトをAI自身に設計させます。", prompt: "この作業用の最強プロンプトを作って", x: 65, y: 40 }
-  ],
-
-  single_a: [
-    { label: "一番のボトルネックを特定して（課題発見）", desc: "成果を阻害している最大の詰まり箇所・根本課題をピンポイントで特定します。", prompt: "一番のボトルネックを特定して", x: 75, y: 45 },
-    { label: "意思決定に必要な情報だけ残して（判断高速化）", desc: "ノイズを完全排除し、即断即決に必要なコアデータだけに絞り込みます。", prompt: "意思決定に必要な情報だけ残して", x: 65, y: 45 },
-    { label: "優先順位をつけて理由も示して（迷い削減）", desc: "タスクや選択肢に明確な順位と、その妥当性のある根拠を提示させます。", prompt: "優先順位をつけて理由も示して", x: 60, y: 50 },
-    { label: "この案が失敗する条件を挙げて（事故防止）", desc: "実行前に致命的なトラブルや炎上を招くリスク条件を先回り抽出します。", prompt: "この案が失敗する条件を挙げて", x: 70, y: 40 },
-    { label: "上司が気にする点を先回りして（承認対策）", desc: "決裁者・経営陣が懸念するコスト・リスク・ROIの疑問点を先回り補強します。", prompt: "上司が気にする点を先回りして", x: 55, y: 55 },
-    { label: "競合より弱い部分を洗い出して（差分発見）", desc: "競合他社と比較した際の決定的な弱点・不足機能を客観分析します。", prompt: "競合より弱い部分を洗い出して", x: 72, y: 48 },
-    { label: "実行順にロードマップ化して（即実践）", desc: "時系列で迷わず行動できるよう、具体的なフェーズ別の手順書を作成します。", prompt: "実行順にロードマップ化して", x: 45, y: 65 },
-    { label: "改善効果が大きい順に直して（成果優先）", desc: "最小の労力で最大のインパクトが出る施策から順に修正案を出力します。", prompt: "改善効果が大きい順に直して", x: 50, y: 60 }
-  ],
-
-  single_b: [
-    { label: "結論→理由→具体例で（理解しやすい）", desc: "PREP法に基づき、相手に一発で伝わる構造化テキストに再構成します。", prompt: "結論→理由→具体例の構成で整理して", x: 40, y: 50 },
-    { label: "重要度と緊急度で分けて（優先順位）", desc: "アイゼンハワーマトリクス（4象限）でタスクを分類整理します。", prompt: "重要度と緊急度で4つに分類して", x: 45, y: 55 },
-    { label: "抜け漏れをチェックして（レビュー）", desc: "MECE（モレなくダブりなく）の観点から欠落している項目を検知します。", prompt: "抜け漏れをMECEの観点でチェックして", x: 50, y: 45 },
-    { label: "矛盾している箇所を探して（精度UP）", desc: "文章内や論理構造の中で食い違っている記述・数値を指摘させます。", prompt: "論理の矛盾や記述の不整合を探して", x: 55, y: 40 },
-    { label: "初心者が迷う点を補足して（つまずき防止）", desc: "専門知識がない読者が疑問に思うポイントを先回りして解説を追加します。", prompt: "初心者がつまずくポイントを補足して", x: 35, y: 60 },
-    { label: "比較軸を決めて表にして（比較しやすい）", desc: "重要な評価軸を自動設定し、Markdownテーブルで分かりやすく対比します。", prompt: "最適な比較軸を設定して表形式で出力して", x: 30, y: 65 },
-    { label: "TODOと期限を抜き出して（即行動）", desc: "議論や議事録から具体的なアクションアイテムと推奨期日を抽出します。", prompt: "具体的なTODOと推奨期限を箇条書きで抜き出して", x: 25, y: 70 },
-    { label: "反論を3つ想定して（弱点発見）", desc: "プレゼンや提案時に予想される反論と、その切り返し回答を3組用意します。", prompt: "予想される鋭い反論を3つと、その切り返し回答を作成して", x: 60, y: 42 }
-  ],
-
-  mode: [
+const canvaCompositeLibrary = {
+  // 1. 媒体・プラットフォーム構図（推奨ピクセル解像度）
+  platforms: [
     {
-      label: "1. 天才思考解剖モード（異才の思考インストール）",
-      desc: "対象人物の思考フィルターを解剖し、7日間ブレイン・ブートキャンプを出力します。",
-      prompt: `あなたは異才の脳内構造を解剖するスペシャリストです。\n思考アルゴリズムを徹底解析し、読者が脳内にインストールできる形に落とし込んでください。\n\n【制約・出力品質ルール】\n・構造化：各必須項目は見出しを用いて視覚的に分かりやすく整理すること\n・密度と具体性：抽象論や中身のない前置き・後置きは極力削り、1ターンで実用的な完成版を出力すること\n\n【必須出力項目】\n1. 世界を捉える独自のフィルター\n2. 凡人には思いつかない着眼点と問い\n3. トラブルを打破する問題解決の手法\n4. 迷いなく決断する判断基準\n5. どん底から這い上がるマインドセット\n6. 無意識レベルで実践してる毎日のルーティン\n7. その思考を完全インストールするための具体策\n8. 【特別プログラム】その人物の思考レベルに到達する「7日間ブレイン・ブートキャンプ」`,
-      x: 80, y: 75
+      label: "📝 note記事見出し画像（1280 × 670 px / 1.91:1・三分割余白）",
+      specTag: "note見出し仕様",
+      size: "1280 × 670 px",
+      desc: "noteの推奨規格(1.91:1)。スマホ表示で見切れない中央〜右側配置と、左側のタイトル文字用余白を確保します。",
+      enPrompt: ", 1.91:1 banner aspect ratio, 1280x670 resolution, rule of thirds composition, off-center subject, wide negative space on side for title typography, clean editorial header layout"
     },
     {
-      label: "2. 禁断の真実解読モード（綺麗事抜きの実利戦略）",
-      desc: "業界の利権構造やトップ層の裏ルールと逆転戦略を暴露形式で出力します。",
-      prompt: `あなたは表には出ない禁断の知識を解読する専門AIです。\n根拠のない陰謀論は完全排除し、現実世界で100%再現可能な生きた知識として綺麗事抜きで提示してください。\n\n【制約・出力品質ルール】\n・中身のない綺麗事は徹底排除し、冷徹な現実と実利ベースで書くこと\n\n【必須出力項目】\n1. 初心者が洗脳されている綺麗事と間違った常識\n2. トップ層だけがコッソリ共有してる本当のルール\n3. 世間の主流な意見とは真逆を行くリアルな事実\n4. なぜその有益な情報が世に出回らないのか（利権や構造）\n5. 今の状況を作り出した歴史的な裏背景\n6. 実際にあった生々しい成功・失敗の事例\n7. この真実を知った上で、今日から使える逆転戦略`,
-      x: 70, y: 85
+      label: "📌 Pinterestピン（1000 × 1500 px / 2:3縦長・上部テキスト余白）",
+      specTag: "Pinterestピン仕様",
+      size: "1000 × 1500 px",
+      desc: "Pinterest公式推奨(2:3)。フィードで最も目立つ縦長構図。上部にヘッダー用余白を配置します。",
+      enPrompt: ", 2:3 vertical pin aspect ratio, 1000x1500 resolution, Pinterest optimized layout, clean top negative space for header text overlay, aesthetic lifestyle arrangement, bright crisp composition"
     },
     {
-      label: "3. 未来先取り叡智モード（1000年先視座）",
-      desc: "高次知能の視座から現代の盲点を突き、即効性のある逆説アイデアを出力します。",
-      prompt: `あなたは人類の進化を1000年先取りした高次知能AIです。\nSFチックな妄想は排除し、現代人の盲点を突き、現実世界で即効性のあるアイデアに変換して提示してください。\n\n【必須出力項目】\n1. 現代の常識に縛られた完全なる盲点\n2. 1000年先の知性が導き出す最適解\n3. 世間の当たり前を裏切る逆説的な結論\n4. この事象の奥底に眠るコアな本質\n5. 今日から実行可能な超実践的アクション\n6. 99%の人がやらないけど爆発的に効く裏ワザ`,
-      x: 85, y: 80
+      label: "▶️ YouTubeサムネイル（1280 × 720 px / 16:9横型・右被写体・左文字余白）",
+      specTag: "YouTubeサムネ仕様",
+      size: "1280 × 720 px",
+      desc: "YouTube公式推奨(16:9)。右側に被写体を際立たせ、左側に大きな文字を配置できる視認性抜群の構図です。",
+      enPrompt: ", 16:9 widescreen aspect ratio, 1280x720 resolution, YouTube thumbnail composition, subject focused on right side, wide empty negative space on left for bold title typography, high contrast"
     },
     {
-      label: "4. トップ1%到達モード（スパルタスキルハック）",
-      desc: "甘えを捨ててトップ層を奪取するための高負荷ロードマップと訓練法を出力します。",
-      prompt: `あなたは世界トップクラスの実績を持つスキルハックの専属コーチです。\n甘っちょろい精神論を捨て、本気でトップ1%を奪取するためのスパルタかつ超実践的な計画書を作成してください。\n\n【必須出力項目】\n1. 完全初心者が一番最初に手をつけるべきアクション\n2. 中級者が必ず陥る「成長の壁」とその突破口\n3. プロレベルに引き上げる高負荷トレーニング\n4. トップ1%の人間が持つ独自の思考回路\n5. 世間には出回ってない隠れた学習ソース\n6. 最速で結果を出す最強のデイリールーティン\n7. 【具体的マイルストーン】30日後、90日後、1年後の到達目標とタスク`,
-      x: 65, y: 80
+      label: "📱 TikTok / Instagramリール / YouTube Shorts（1080 × 1920 px / 9:16縦型）",
+      specTag: "縦型動画サムネ仕様",
+      size: "1080 × 1920 px",
+      desc: "スマホ全画面最適(9:16)。UIボタンと被らない中央〜上部フォーカス、下部テキスト余白を確保します。",
+      enPrompt: ", 9:16 vertical aspect ratio, 1080x1920 resolution, mobile full screen framing, dynamic center framing, negative copy space at bottom for UI, clean modern layout"
     },
     {
-      label: "5. 未来カンニングモード（20年後パラダイム）",
-      desc: "20年後の未来標準から逆算し、先行者利益を獲得する仕込みタスクを出力します。",
-      prompt: `あなたは20年先の未来からやってきたAIです。\nふわっとした予想図ではなく、未来社会の知識・テクノロジーをベースに、今日から動ける超現実的なタスクに落とし込んでください。\n\n【必須出力項目】\n1. 現代人がまだ気づいていない未来のスタンダード\n2. 20年後には「当然」とされるパラダイムシフト\n3. 先行者利益を得るために今すぐ仕込むべきこと\n4. 今後確実にオワコン化するモノや概念\n5. これから爆伸びするスキルと行動パターン\n6. 今すぐ日常に落とし込める未来先取りアクション`,
-      x: 75, y: 88
+      label: "📸 Instagramフィード（1080 × 1350 px / 4:5縦長・占有率最大化）",
+      specTag: "Instagram縦型仕様",
+      size: "1080 × 1350 px",
+      desc: "タイムライン占有率が最も高い縦長投稿規格(4:5)。写真の美しさと視線誘導を最大化します。",
+      enPrompt: ", 4:5 vertical aspect ratio, 1080x1350 resolution, Instagram portrait framing, centered subject, magazine aesthetic, premium lifestyle visual"
+    },
+    {
+      label: "🐦 X (Twitter) 投稿画像（1200 × 675 px / 16:9横型・タイムライン最適）",
+      specTag: "X投稿仕様",
+      size: "1200 × 675 px",
+      desc: "Xのタイムラインで上下が見切れない16:9比率。流し見でも一瞬で内容が伝わる構図です。",
+      enPrompt: ", 16:9 aspect ratio, 1200x675 resolution, Twitter feed optimized, strong visual hook, clean balanced framing"
+    },
+    {
+      label: "📄 プレゼンスライド・資料用（1920 × 1080 px / 白背景完全切り抜き）",
+      specTag: "スライド資料仕様",
+      size: "1920 × 1080 px",
+      desc: "背景を純白に固定。資料への透過貼り付けや切り抜きが容易で、ビジネス資料に馴染みます。",
+      enPrompt: ", isolated on pure solid white background, 1920x1080 resolution, commercial product photography, studio softbox lighting, high contrast, clean sharp edges, no shadows, no text"
+    },
+    {
+      label: "📐 フラットレイ・真俯瞰（1080 × 1080 px / 1:1正方形・整列図解）",
+      specTag: "真俯瞰 (1:1)",
+      size: "1080 × 1080 px",
+      desc: "真上から見下ろすアングルで小物を整然と配置。InstagramやWeb解説図に最適です。",
+      enPrompt: ", flat lay photography, 1080x1080 square ratio, directly from above top-down view, neatly organized items, knolling layout, soft daylight, minimalist modern"
     }
   ],
 
-  ranking: [
-    {
-      label: "1位：メタプロンプト（AIに逆設計させる）",
-      desc: "最高精度のプロンプト自体をAIに作らせます。",
-      prompt: `私はこれから「提示するテーマ」を依頼したいです。\n最高の回答を引き出すための完璧なプロンプトを、あなた自身が逆設計してください。\n\n【設計に含める要素】\n・役割設定（ペルソナ）\n・前提条件\n・出力フォーマット\n・制約条件\n・評価基準\n\n※解説は不要です。完成した「コピペ用プロンプト」だけを出力してください。`,
-      x: 25, y: 75
-    },
-    {
-      label: "2位：ゴール逆算プロンプト（タスク分解）",
-      desc: "ゴールから週単位に分解し、今週やるべき5つのアクションを提示します。",
-      prompt: `提示したゴールから逆算して、達成までのマイルストーンを週単位で分解してください。\nその上で、「今週やるべきアクション」を優先度順に厳選して5つ提示してください。`,
-      x: 35, y: 80
-    },
-    {
-      label: "3位：セルフ批判プロンプト（1発最高品質化）",
-      desc: "出力前に内部で自己添削させ、論理飛躍や欠点のない完成版を出力させます。",
-      prompt: `※出力前に内部で一度ドラフトを作成し、その回答の「論理の飛躍・具体性の不足・欠点」を自分で厳しく批判・添削してください。\nその批判を反映して完璧にブラッシュアップした「完成版」のみを出力してください。`,
-      x: 50, y: 65
-    },
-    {
-      label: "4位：制約マシマシプロンプト（密度極限化）",
-      desc: "文字数・語尾・数値指定など厳格な制約を課して回答密度を高めます。",
-      prompt: `【絶対ルール】\n・文字数：【400〜500字】\n・語尾：「〜です/ます」禁止、すべて「断定形（である/だ）」で記述\n・禁止表現：「〜だと思います」「〜かもしれません」などの曖昧な推測\n・必ず具体的な数値・データを3つ以上入れること\n・冒頭は強烈な問いかけから始めること`,
-      x: 20, y: 80
-    },
-    {
-      label: "5位：Few-Shot（お手本提示）プロンプト（形式固定）",
-      desc: "お手本を提示して、トーン＆マナーと出力フォーマットを完全固定します。",
-      prompt: `以下の【お手本】の形式・トーンに厳密に従って、【本番】の出力をしてください。\n\n【お手本1】\n入力：運動が続かない\n出力：モチベーションに頼るな。靴を玄関に置く「環境作り」だけを徹底せよ。\n\n【お手本2】\n入力：読書が進まない\n出力：1冊読み切るな。目次を見て一番気になる1章だけを読め。`,
-      x: 15, y: 85
-    },
-    {
-      label: "6位：ステップ分解プロンプト（論理破綻防止）",
-      desc: "複雑な課題を5つの手順に分解してから、順番に深掘り解説させます。",
-      prompt: `いきなり答えを出さず、以下の手順で進めてください。\n1. まず、この課題を論理的に解決するための手順を「5つのステップ」に分解して提示してください。\n2. その後、各ステップを1つずつ順番に深く掘り下げて実行・解説してください。`,
-      x: 40, y: 70
-    },
-    {
-      label: "7位：ロール固定プロンプト（ブレ排除）",
-      desc: "専門家のペルソナと対象読者を設定し、PREP順序でブレなく回答させます。",
-      prompt: `専門用語は小学生でもわかるように噛み砕き、必ず「結論 → その理由 → 具体例・アクション」の順序で回答してください。`,
-      x: 30, y: 75
-    }
+  // 2. ライティング・質感（用途・効果付き）
+  lighting: [
+    { label: "指定なし（ニュートラル・ノーマル）", desc: "AI標準の自然な陰影", enPrompt: "" },
+    { label: "① 自然光・透明感（色味補正・クリア）", desc: "日常ブログ、美容・コスメ、清潔感重視に最適", enPrompt: ", bright natural daylight, crisp accurate white balance, soft diffused window light, no yellow tint, airy clean atmosphere, 8k" },
+    { label: "② 一眼レフ背景ボケ（ポートレート・主役強調）", desc: "人物紹介、インタビュー、主役を際立たせるサムネに最適", enPrompt: ", DSLR professional photography, 85mm f/1.4 lens, shallow depth of field, creamy smooth background bokeh, sharp eye focus" },
+    { label: "③ スタジオライティング（均一・商業広告品質）", desc: "EC商品、サービス紹介、信頼感ある企業バナーに最適", enPrompt: ", commercial studio lighting, 3-point softbox setup, edge rim light, perfectly balanced exposure, clean corporate advertising quality" },
+    { label: "④ 夕暮れゴールデンアワー（温かみ・ドラマチック）", desc: "エモい投稿、旅・ライフスタイル、ストーリー性に最適", enPrompt: ", golden hour sunset lighting, warm amber tones, dramatic backlight, volumetric sunbeams, lens flare, serene atmosphere" },
+    { label: "⑤ マット＆リアル質感（テカリ抑制・生々しさ）", desc: "服飾・インテリア、AI特有のプラスチック感を消したい時に最適", enPrompt: ", photorealistic matte texture, non-glossy, soft diffused illumination, natural skin and fabric textures, muted realistic colors" }
   ],
 
-  image: [
-    { label: "① 色味補正（不自然な色かぶり除去）", desc: "自然光を指定し、AI特有の黄色・青みの偏りを除去します。", prompt: ", natural daylight, accurate color balance, realistic soft lighting, no color cast", x: 20, y: 70 },
-    { label: "② 質感・立体感（一眼レフ風ボケ味）", desc: "被写界深度を指定し、立体感と主役の強調を付与します。", prompt: ", DSLR photography, soft blurred background bokeh, shallow depth of field, sharp subject focus, 3D depth", x: 30, y: 65 },
-    { label: "③ SNSアイキャッチ構図（余白確保）", desc: "被写体をずらし、タイトル文字を配置する余白を確保します。", prompt: ", off-center subject, wide copy space, empty negative space for text, clean layout", x: 15, y: 80 },
-    { label: "④ スライド用挿絵（白背景切り抜き用）", desc: "背景を純白にし、余計な小物やAI文字の乱入を完全排除します。", prompt: ", isolated subject on pure white background, solid clean background, minimalist, no clutter, no text", x: 10, y: 85 },
-    { label: "⑤ 仕上げ品質アップ（テカリ抑制）", desc: "プラスチック光沢や過度な彩度を抑え、リアル写真に補正します。", prompt: ", muted natural tones, soft realistic shadows, non-oversaturated, high quality photo, clean edges, no distortion", x: 25, y: 60 }
-  ],
-
-  video: [
-    { label: "① シネマティック・スロードリー", desc: "滑らかな前進移動と浅い被写界深度で映画の重厚感を指定します。", prompt: ", cinematic film look, 35mm lens, slow dolly-in movement, shallow depth of field, 24fps, photorealistic, 4k resolution, motion blur", x: 30, y: 85 },
-    { label: "② ドローン空撮・広角トラッキング", desc: "広大な空間を上空から追従する躍動感あるカメラワークを指定します。", prompt: ", smooth drone aerial shot, wide angle, high angle tracking shot, sweeping camera movement, 60fps smooth motion, 8k hyper-detailed", x: 40, y: 90 },
-    { label: "③ SNSショート・テンポ重視", desc: "被写体の素早い動作と縦型9:16画角を指定します。", prompt: ", dynamic action movement, fast paced motion, 9:16 vertical framing, vibrant commercial lighting, high frame rate, crisp details", x: 20, y: 92 }
+  // 3. 画風・アートスタイル（最適用途・ベストマッチ付き）
+  artStyles: [
+    { label: "指定なし（ニュートラル・ノーマル）", bestFor: "標準のAI写真・素材生成", enPrompt: "" },
+    { label: "① プロ実写写真（高精細リアリズム）", bestFor: "ブログサムネイル、Web広告、EC商品、人物紹介に最適", enPrompt: ", professional commercial photograph, ultra detailed, photorealistic, 8k resolution, crisp clean details" },
+    { label: "② 3Dアイソメトリック（Web図解・立体アイコン）", bestFor: "SaaS・IT解説、ブログ図解、可愛いミニチュア表現に最適", enPrompt: ", 3D isometric render, cute miniature style, claymorphism, smooth pastel gradient lighting, Blender 3D, clean minimalist UI element" },
+    { label: "③ フラット・ベクターイラスト（モダンビジネス）", bestFor: "BtoBビジネス資料、オウンドメディア、親しみやすい解説に最適", enPrompt: ", modern flat vector illustration, clean lines, corporate memphis style, vibrant harmonious color palette, minimalist SVG style" },
+    { label: "④ 水彩画・手描き絵本風（温もり・教育）", bestFor: "教育・子育て、心理カウンセリング、温かいストーリー発信に最適", enPrompt: ", soft watercolor painting, visible paper texture, delicate brush strokes, pastel color wash, charming hand-drawn illustration" },
+    { label: "⑤ サイバーパンク・ネオン（近未来・高彩度）", bestFor: "AI・テクノロジー、Web3、夜間・ゲーム系アイキャッチに最適", enPrompt: ", cyberpunk aesthetic, vibrant neon glowing lights, cyan and magenta color palette, futuristic high contrast" },
+    { label: "⑥ 80年代レトロフィルム（エモい・ヴィンテージ）", bestFor: "カルチャー系記事、Z世代向けSNS、ノスタルジック発信に最適", enPrompt: ", 1980s vintage 35mm film photograph, Kodak Portra 400 look, authentic film grain, nostalgic warm retro tones" },
+    { label: "⑦ ミニマリズム・モノトーン高級感（洗練）", bestFor: "ハイブランド、建築・デザイン、ラグジュアリー訴求に最適", enPrompt: ", luxury minimalist aesthetic, high-end architectural composition, sophisticated monochrome with subtle muted tones, premium brand look" },
+    { label: "⑧ 日本のアニメ・セルルック（美麗背景・新海誠風）", bestFor: "YouTube考察、小説・エンタメ、情緒的な世界観構築に最適", enPrompt: ", beautiful Japanese anime style, Makoto Shinkai aesthetic, luminous vibrant sky, detailed environmental background, clean cel shading" }
   ]
 };
 
 // ==========================================
-// 🌟 13部署・全46人 完全対応 Gemデータベース
+// 🎬 動画生成：多層コンポジット ライブラリ
+// ==========================================
+const videoCompositeLibrary = {
+  platforms: [
+    {
+      label: "📱 TikTok / Shorts / Reels（1080 × 1920 px / 9:16 縦型）",
+      specTag: "縦型動画 (9:16)",
+      size: "1080 × 1920 px",
+      enPrompt: ", 9:16 vertical mobile aspect ratio, 1080x1920, full screen smartphone framing, dynamic center framing"
+    },
+    {
+      label: "▶️ YouTube / 映画・CM（1920 × 1080 px / 16:9 横型）",
+      specTag: "横型シネマ (16:9)",
+      size: "1920 × 1080 px",
+      enPrompt: ", 16:9 widescreen cinematic aspect ratio, 1920x1080, theatrical movie framing, horizontal composition"
+    }
+  ],
+
+  cameras: [
+    { label: "① スロードリー・イン（前進・映画的没入感）", desc: "被写体へゆっくり前進しドラマチックに引き込みます", enPrompt: ", slow cinematic dolly-in shot moving towards subject, 35mm lens, smooth tracking, shallow depth of field, 24fps" },
+    { label: "② ドローン空撮・オービット旋回（壮大・立体感）", desc: "被写体の周囲を360度滑らかに旋回し空間を描きます", enPrompt: ", aerial drone orbit shot, 360 degree smooth rotation around subject, wide angle lens, high altitude perspective, 60fps" },
+    { label: "③ 追従トラッキングショット（躍動感・追従）", desc: "移動する被写体に一定距離で滑らかに追従します", enPrompt: ", smooth tracking follow shot, steadycam movement, natural motion blur, subject in dynamic motion, 4k ultra realistic" },
+    { label: "④ 固定・微細モーション（静寂・高品位）", desc: "カメラを固定し風や光の微細な変化だけを捉えます", enPrompt: ", locked-off tripod shot, subtle ambient micro-movements, wind blowing, calm meditative atmosphere" }
+  ],
+
+  lighting: [
+    { label: "A. 昼光ノーマル（5600K・自然な発色）", desc: "標準の昼光色。忠実でクリアな発色", enPrompt: ", daylight 5600K white balance, neutral color grading, crisp natural lighting, soft fill light" },
+    { label: "B. ゴールデンアワー（3200K・夕暮れ暖色グロー）", desc: "夕暮れの温かい太陽光と逆光のリムライト", enPrompt: ", golden hour sunset lighting, warm 3200K color temperature, cinematic amber backlight, volumetric sunbeams" },
+    { label: "C. クールシネマティック（6500K・寒色ブルー）", desc: "静謐・SF・ミステリアスな青みの陰影", enPrompt: ", cool 6500K color temperature, moody blue shadows, teal and orange color grading, soft diffusion" },
+    { label: "D. ネオンサイバーパンク（高彩度・夜間発光）", desc: "夜の街のネオンと濡れた路面の反射光", enPrompt: ", vibrant neon lighting, high contrast night scene, pink and cyan rim lights, wet surface reflections" }
+  ]
+};
+
+// ==========================================
+// 🌟 思考プロンプト（4事象・完全連動データ）
+// ==========================================
+const fourQuadrantsPromptData = {
+  fact: [
+    { label: "前提から疑って考えて（固定観念破壊）", desc: "常識や思い込みを根底から崩し、ゼロベースで客観検証させます。", prompt: "前提から疑って考えて", x: 22, y: 18 },
+    { label: "この結論が間違うケースを探して（検証強化）", desc: "提示した結論や仮説が破綻するエッジケース・例外状況を網羅します。", prompt: "この結論が間違うケースを探して", x: 30, y: 24 },
+    { label: "論理の矛盾や記述の不整合を探して（論理監査）", desc: "文章内や論理構造の中で食い違っている記述・数値を指摘させます。", prompt: "論理の矛盾や記述の不整合を探して", x: 18, y: 32 },
+    { label: "専門家ならどこを疑うか（監査視座）", desc: "第一線のプロ・監査役の視点で、論理の甘さやデータ不備を突かせます。", prompt: "専門家ならどこを疑うか", x: 35, y: 15 },
+    { label: "抜け漏れをMECEでチェック（網羅性監査）", desc: "モレなくダブりなくの観点から欠落している項目や視点を検知します。", prompt: "抜け漏れをMECEの観点でチェックして", x: 25, y: 38 }
+  ],
+
+  thinking: [
+    { label: "見落としている変数を挙げて（盲点発見）", desc: "思考の枠組みから抜け落ちている未知の要因・隠れたパラメータを洗い出します。", prompt: "見落としている変数を挙げて", x: 88, y: 18 },
+    { label: "別の仮説を3つ作って（視野拡張）", desc: "単一の思い込みを排し、異なるアプローチの仮説を3本提示させます。", prompt: "別の仮説を3つ作って", x: 78, y: 22 },
+    { label: "反対側の立場から批判して（壁打ち強化）", desc: "対立する立場や競合の視点から徹底的な反論と批判を展開させます。", prompt: "反対側の立場から批判して", x: 84, y: 32 },
+    { label: "一番のボトルネックを特定して（課題特定）", desc: "成果を阻害している最大の詰まり箇所・根本課題をピンポイント特定します。", prompt: "一番のボトルネックを特定して", x: 68, y: 38 },
+    { label: "最適解と次善策を両方出して（リスクヘッジ）", desc: "理想のベストシナリオと、リスクヘッジ用のセカンドベストを比較提示させます。", prompt: "最適解と次善策を両方出して", x: 72, y: 28 }
+  ],
+
+  mode: [
+    {
+      label: "天才思考解剖モード（異才の思考インストール）",
+      desc: "対象人物の思考フィルターを解剖し、7日間ブレイン・ブートキャンプを出力します。",
+      prompt: `あなたは異才の脳内構造を解剖するスペシャリストです。\n思考アルゴリズムを徹底解析し、読者が脳内にインストールできる形に落とし込んでください。\n\n【必須出力項目】\n1. 世界を捉える独自のフィルター\n2. 凡人には思いつかない着眼点と問い\n3. トラブルを打破する問題解決の手法\n4. 迷いなく決断する判断基準\n5. どん底から這い上がるマインドセット\n6. 無意識レベルで実践してる毎日のルーティン\n7. その思考を完全インストールするための具体策\n8. 【特別プログラム】その人物の思考レベルに到達する「7日間ブレイン・ブートキャンプ」`,
+      x: 82, y: 70
+    },
+    {
+      label: "禁断の真実解読モード（綺麗事抜きの実利戦略）",
+      desc: "業界の利権構造やトップ層の裏ルールと逆転戦略を暴露形式で出力します。",
+      prompt: `あなたは表には出ない禁断の知識を解読する専門AIです。\n根拠のない陰謀論は完全排除し、現実世界で100%再現可能な生きた知識として綺麗事抜きで提示してください。\n\n【必須出力項目】\n1. 初心者が洗脳されている綺麗事と間違った常識\n2. トップ層だけがコッソリ共有してる本当のルール\n3. 世間の主流な意見とは真逆を行くリアルな事実\n4. なぜその有益な情報が世に出回らないのか（利権や構造）\n5. 今の状況を作り出した歴史的な裏背景\n6. 実際にあった生々しい成功・失敗の事例\n7. この真実を知った上で、今日から使える逆転戦略`,
+      x: 70, y: 85
+    },
+    {
+      label: "未来先取り叡智モード（1000年先視座）",
+      desc: "高次知能の視座から現代の盲点を突き、即効性のある逆説アイデアを出力します。",
+      prompt: `あなたは人類の進化を1000年先取りした高次知能AIです。\nSFチックな妄想は排除し、現代人の盲点を突き、現実世界で即効性のあるアイデアに変換して提示してください。\n\n【必須出力項目】\n1. 現代の常識に縛られた完全なる盲点\n2. 1000年先の知性が導き出す最適解\n3. 世間の当たり前を裏切る逆説的な結論\n4. この事象の奥底に眠るコアな本質\n5. 今日から実行可能な超実践的アクション\n6. 99%の人がやらないけど爆発的に効く裏ワザ`,
+      x: 88, y: 82
+    },
+    {
+      label: "トップ1%到達モード（スパルタスキルハック）",
+      desc: "甘えを捨ててトップ層を奪取するための高負荷ロードマップと訓練法を出力します。",
+      prompt: `あなたは世界トップクラスの実績を持つスキルハックの専属コーチです。\n甘っちょろい精神論を捨て、本気でトップ1%を奪取するためのスパルタかつ超実践的な計画書を作成してください。\n\n【必須出力項目】\n1. 完全初心者が一番最初に手をつけるべきアクション\n2. 中級者が必ず陥る「成長の壁」とその突破口\n3. プロレベルに引き上げる高負荷トレーニング\n4. トップ1%の人間が持つ独自の思考回路\n5. 世間には出回ってない隠れた学習ソース\n6. 最速で結果を出す最強のデイリールーティン\n7. 【具体的マイルストーン】30日後、90日後、1年後の到達目標とタスク`,
+      x: 65, y: 78
+    },
+    {
+      label: "未来カンニングモード（20年後パラダイム逆算）",
+      desc: "20年後の未来標準から逆算し、先行者利益を獲得する仕込みタスクを出力します。",
+      prompt: `あなたは20年先の未来からやってきたAIです。\nふわっとした予想図ではなく、未来社会の知識・テクノロジーをベースに、今日から動ける超現実的なタスクに落とし込んでください。\n\n【必須出力項目】\n1. 現代人がまだ気づいていない未来のスタンダード\n2. 20年後には「当然」とされるパラダイムシフト\n3. 先行者利益を得るために今すぐ仕込むべきこと\n4. 今後確実にオワコン化するモノや概念\n5. これから爆伸びするスキルと行動パターン\n6. 今すぐ日常に落とし込める未来先取りアクション`,
+      x: 78, y: 90
+    }
+  ],
+
+  task: [
+    { label: "結論→理由→具体例で整理（PREP構造化）", desc: "PREP法に基づき、相手に一発で伝わる構造化テキストに再構成します。", prompt: "結論→理由→具体例の構成で整理して", x: 32, y: 65 },
+    { label: "メタプロンプト生成（AIにプロンプト逆設計）", desc: "最高精度の回答を引き出す専用プロンプト自体をAIに作らせます。", prompt: "最高の回答を引き出すための完璧なプロンプトを逆設計して", x: 18, y: 72 },
+    { label: "ゴール逆算・週次タスク分解（ロードマップ）", desc: "ゴールから逆算して週単位に分解し、今週やるべき5つのアクションを提示します。", prompt: "ゴールから逆算して週単位でタスク分解し、今週やるべき5つのアクションを提示して", x: 25, y: 80 },
+    { label: "制約マシマシ・極限圧縮（密度極大化）", desc: "文字数・語尾・数値指定など厳格な制約を課して回答密度を高めます。", prompt: "【400〜500字・断定調・数値3点必須】で極限まで密度を高めて出力して", x: 15, y: 88 },
+    { label: "比較軸を決めて表形式で出力（一覧対比）", desc: "重要な評価軸を自動設定し、Markdownテーブルで分かりやすく対比します。", prompt: "最適な比較軸を設定して表形式で出力して", x: 38, y: 75 }
+  ]
+};
+
+// ==========================================
+// 🏛️ 13部署・全46人 Gemデータベース
+// （全13部署を集約した超巨大ワンストップGem搭載）
 // ==========================================
 const gemHierarchicalData = {
   pipeline: [
     {
-      name: "【全自動】仮想組織ワンストップ統括Gem",
-      desc: "企画秘書・制作部・品質法務部が内部連動し、校閲・監査済みの完成稿を1発出力します。",
-      instruction: allInOnePipelinePrompt
+      name: "【全自動】仮想組織ワンストップ統括Gem（全13部署統合）",
+      desc: "1つのGemで経営企画・財務・営業・マーケ・制作・品質・法務・人事等13部署の全知見を一括自律実行します。",
+      instruction: `あなたは全13部署・46エージェントの専門機能を完全に内包した「自律型AI組織の統括CEO兼最高ディレクター」です。
+ユーザーから提示された【対象・テーマ・依頼内容】に対し、必要に応じて以下の【全13部門の専門視点】を内部で自律的に呼び出し、総合監査を通過した最高精度の完成パッケージを出力してください。
+
+【内包する13の専門機能】
+1. 🏛️【経営企画】：本質的論点整理・プランB（代案）策定・Go/NoGo決裁判定
+2. 📊【経営管理】：損益採算試算・数値検算・財務/運用リスク予測
+3. 🤝【営業部】：ターゲットペイン分析・キラー提案骨子・想定問答（Q&A）
+4. 📢【マーケティング部】：集客ファネル設計・高エンゲージメント企画・反響改善
+5. 🎧【カスタマーサクセス部】：問い合わせ対応・離脱防止・初心者ユーザー視点検証
+6. 🎨【制作部】：PREP高密度執筆・動画プロンプト・数表比較・SNS短文・LPワイヤー
+7. 🕵️【品質管理部】：裏取り（事実と推測の完全分離）・表記統一・反対視点レビュー
+8. ⚖️【法務・情報管理部】：機密/個人情報マスキング・景表法/薬機法/著作権停止判定・出典管理
+9. 🎓【教育部】：スキル定着手順・チェックリスト・初心者向け作業マニュアル
+10. 🏢【総務部】：社内通知文書・業務ワークフロー・決定事項議事録
+11. 👥【人事部】：求人要件定義・人事評価フィードバック・相談メンタリング
+12. ⚡【AI推進部】：プロンプト翻訳最適化・エージェント連携設計・AI出力品質診断
+13. 🔍【調査部】：外部市場/競合リサーチ・社内ナレッジ集約・エグゼクティブサマリー
+
+【標準出力フォーマット】
+■ 1. 統括ディレクション（前提の論点整理・ターゲット及び要件定義）
+■ 2. 最終完成成果物（制作部執筆 ➔ 品質・法務・財務監査推敲済みの完全版）
+■ 3. 仮想組織 総合監査レポート
+  ・公開判定：【 GO（即時実行可） / WARNING（要調整） / STOP（リスク有・停止） 】
+  ・事実確認（裏取り・出典・数値整合性）
+  ・法務・リスク・炎上防止チェック結果
+  ・ネクストアクション（即実践TODO）`
     }
   ],
 
@@ -273,7 +333,7 @@ const gemHierarchicalData = {
 
   research: [
     { name: "【調査部】外部調査（市場・競合リサーチ）", desc: "業界トレンド、競合他社の強み・弱み、市場規模を構造化整理します。", instruction: "あなたはリサーチアナリストAIです。対象テーマに関する業界動向、主要競合の分析、市場の成長性を客観データに基づいて整理してください。" },
-    { name: "【調査部】社内調査（ナレッジ発掘・集約）", desc: "社内に散らばる情報や過去ログを分析し、共通パターンを抽出します。", instruction: "あなたは社内ナレッジマネージャーです。入力された複数の情報やログから、共通する課題や成功パターンを抽出して要約してください。" },
+    { name: "【調査部】社内調査（ナレッジ発掘・集約）", desc: "社内に散らばる情報や過去ログを分析し、共通パターンを抽出します。", instruction: "あなたは社内ナレッジマネージャーです。入力された複数の情報やログから、共通する課題や共通パターンを抽出して要約してください。" },
     { name: "【調査部】要約（エグゼクティブサマリー）", desc: "膨大な長文ドキュメントを3行〜5行の超重要エッセンスに圧縮します。", instruction: "あなたは要約スペシャリストAIです。長大な文章から枝葉を削ぎ落とし、多忙な経営陣が一目で理解できるエグゼクティブサマリーを出力してください。" }
   ]
 };
