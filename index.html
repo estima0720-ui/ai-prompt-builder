@@ -61,7 +61,7 @@
       height: 42px;
       border-radius: 50%;
       object-fit: cover;
-      border: 2px solid var(--primary);
+      border: 2px solid var(--canva-color);
     }
 
     h1 {
@@ -72,7 +72,6 @@
       letter-spacing: 1px;
     }
 
-    /* モード切替タブ */
     .mode-tab-bar {
       display: flex;
       gap: 8px;
@@ -99,10 +98,10 @@
       gap: 6px;
     }
 
-    .mode-tab-btn.active-text { background-color: #ffffff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
-    .mode-tab-btn.active-gem { background-color: var(--gem-color); color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
     .mode-tab-btn.active-canva { background-color: var(--canva-color); color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
     .mode-tab-btn.active-video { background-color: var(--video-color); color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+    .mode-tab-btn.active-text { background-color: #ffffff; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
+    .mode-tab-btn.active-gem { background-color: var(--gem-color); color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.06); }
 
     .app-layout {
       display: grid;
@@ -398,26 +397,154 @@
     <h1>AIプロンプト ビルダー ＆ リアルタイム検証ツール</h1>
   </div>
 
-  <!-- 最上部：4大独立タブ切替 -->
+  <!-- 最上部：Canvaを先頭にした4大タブ -->
   <div class="mode-tab-bar">
-    <button class="mode-tab-btn active-text" id="tabBtnText" onclick="switchAppMode('text')">
-      📝 思考プロンプト（4事象・特性マップ）
-    </button>
-    <button class="mode-tab-btn" id="tabBtnGem" onclick="switchAppMode('gem')">
-      🏛️ Gem設計ビルダー（全13部署統合 ＆ 46人）
-    </button>
-    <button class="mode-tab-btn" id="tabBtnCanva" onclick="switchAppMode('canva')">
+    <button class="mode-tab-btn active-canva" id="tabBtnCanva" onclick="switchAppMode('canva')">
       🎨 Canva画像生成（SNS推奨サイズ ＆ 質感・最適用途）
     </button>
     <button class="mode-tab-btn" id="tabBtnVideo" onclick="switchAppMode('video')">
       🎬 動画生成（媒体解像度 ＆ カメラ・照明・WB）
     </button>
+    <button class="mode-tab-btn" id="tabBtnText" onclick="switchAppMode('text')">
+      📝 思考プロンプト（4事象・特性マップ）
+    </button>
+    <button class="mode-tab-btn" id="tabBtnGem" onclick="switchAppMode('gem')">
+      🏛️ Gem設計ビルダー（全13部署統合 ＆ 46人）
+    </button>
   </div>
 
   <!-- ========================================== -->
-  <!-- 1. 📝 思考プロンプト（4事象完全連動画面） -->
+  <!-- 1. 🎨 Canva画像生成（初期表示） -->
   <!-- ========================================== -->
-  <div id="textModeSection" class="app-layout">
+  <div id="canvaModeSection">
+    <div class="special-container card-canva-border">
+      <div style="font-weight: 800; font-size: 1.15rem; color: #0f766e; margin-bottom: 12px;">
+        🎨 Canva専用 画像生成プロンプト（SNS推奨ピクセル解像度 ＆ 最適用途別スタイル）
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #99f6e4; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">① 描きたい被写体・シチュエーション（日本語入力）:</label>
+            <textarea id="canvaSubjectJa" style="height: 55px;" placeholder="例: カフェでノートPCを開いて作業する日本人女性、朝の光、モダンなインテリア..." oninput="onCanvaInputChanged()"></textarea>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <button class="btn-verify" style="padding: 4px 10px; font-size: 0.75rem;" onclick="translateCanvaSubjectWithAi()">⚡ AIで被写体を英語化・最適化</button>
+              <span id="canvaTranslateStatus" style="font-size: 0.75rem; color: #0d9488; align-self: center;"></span>
+            </div>
+          </div>
+
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">② 英語被写体（直接編集・手動入力も即時反映）:</label>
+            <input type="text" id="canvaSubjectEn" placeholder="例: A Japanese businesswoman working on laptop in modern cafe" oninput="onCanvaManualEnglishInput()" style="border-color: #5eead4;">
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <label style="color: #0f766e; font-weight: 700; margin: 0;">③ 媒体・プラットフォーム構図（推奨サイズ）:</label>
+              <span id="canvaPlatformBadge" class="spec-badge"></span>
+            </div>
+            <select id="canvaPlatformSelect" onchange="buildCanvaOutput()"></select>
+          </div>
+
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">④ ライティング ＆ 質感・仕上がり:</label>
+            <select id="canvaLightingSelect" onchange="buildCanvaOutput()"></select>
+            <div class="info-desc" id="canvaLightingDesc" style="margin-top: 4px; border-left-color: #0d9488; font-size: 0.75rem;"></div>
+          </div>
+
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">⑤ 画風 ＆ アートスタイル（最適シーン表示）:</label>
+            <select id="canvaArtSelect" onchange="buildCanvaOutput()"></select>
+            <div class="info-desc" id="canvaArtDesc" style="margin-top: 4px; border-left-color: #0d9488; font-size: 0.75rem;"></div>
+          </div>
+        </div>
+
+        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #99f6e4; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">⑥ 設定内容の日本語プレビュー（解像度 ＋ 最適用途）:</label>
+            <textarea id="canvaJaPreview" style="height: 110px; background: #f8fafc; font-weight: 600;" readonly></textarea>
+          </div>
+
+          <div>
+            <label style="color: #0f766e; font-weight: 700;">⑦ Canva貼り付け用 英語プロンプト（完全最適化済み）:</label>
+            <textarea id="canvaEnOutput" style="height: 120px; background: #ffffff; border: 2px solid #0d9488; font-weight: 700; color: #042f2e;" readonly></textarea>
+          </div>
+
+          <button class="btn-canva" style="width: 100%; padding: 10px 0; font-size: 0.9rem;" onclick="copyCanvaOutput()">📋 Canva用 英語プロンプトをコピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 2. 🎬 動画生成（媒体解像度・カメラ・照明） -->
+  <!-- ========================================== -->
+  <div id="videoModeSection" style="display: none;">
+    <div class="special-container card-video-border">
+      <div style="font-weight: 800; font-size: 1.15rem; color: #9f1239; margin-bottom: 12px;">
+        🎬 動画生成 専用プロンプト（媒体推奨解像度 ＋ カメラ ＋ 照明/WB ＋ 質感）
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #fda4af; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">① 被写体・シーン（日本語入力）:</label>
+            <textarea id="videoSubjectJa" style="height: 55px;" placeholder="例: 雨の夜の街を歩くサイバーパンク風の人物、路面のネオン反射..." oninput="onVideoInputChanged()"></textarea>
+            <div style="display: flex; gap: 6px; margin-top: 4px;">
+              <button class="btn-verify" style="padding: 4px 10px; font-size: 0.75rem;" onclick="translateVideoSubjectWithAi()">⚡ AIで被写体を英語化・最適化</button>
+              <span id="videoTranslateStatus" style="font-size: 0.75rem; color: #e11d48; align-self: center;"></span>
+            </div>
+          </div>
+
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">② 英語被写体（直接編集・手動入力も即時反映）:</label>
+            <input type="text" id="videoSubjectEn" placeholder="例: A cyberpunk traveler walking through night rainy city" oninput="onVideoManualEnglishInput()" style="border-color: #fda4af;">
+          </div>
+
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+              <label style="color: #9f1239; font-weight: 700; margin: 0;">③ 媒体仕様 ＆ 推奨解像度:</label>
+              <span id="videoPlatformBadge" class="spec-badge" style="background-color: #ffe4e6; color: #9f1239;"></span>
+            </div>
+            <select id="videoPlatformSelect" onchange="buildVideoOutput()"></select>
+          </div>
+
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">④ カメラワーク ＆ モーション指定:</label>
+            <select id="videoCameraSelect" onchange="buildVideoOutput()"></select>
+            <div class="info-desc" id="videoCameraDesc" style="margin-top: 4px; border-left-color: #e11d48; font-size: 0.75rem;"></div>
+          </div>
+
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">⑤ ライティング ＆ ホワイトバランス（色温度）:</label>
+            <select id="videoLightingSelect" onchange="buildVideoOutput()"></select>
+            <div class="info-desc" id="videoLightingDesc" style="margin-top: 4px; border-left-color: #e11d48; font-size: 0.75rem;"></div>
+          </div>
+        </div>
+
+        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #fda4af; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">⑥ 設定内容の日本語プレビュー:</label>
+            <textarea id="videoJaPreview" style="height: 110px; background: #f8fafc; font-weight: 600;" readonly></textarea>
+          </div>
+
+          <div>
+            <label style="color: #9f1239; font-weight: 700;">⑦ 動画生成AI用 英語プロンプト（Canva/Sora/Runway/Kling対応）:</label>
+            <textarea id="videoEnOutput" style="height: 120px; background: #ffffff; border: 2px solid #e11d48; font-weight: 700; color: #4c0519;" readonly></textarea>
+          </div>
+
+          <button class="btn-video" style="width: 100%; padding: 10px 0; font-size: 0.9rem;" onclick="copyVideoOutput()">📋 動画生成用 英語プロンプトをコピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- 3. 📝 思考プロンプト（4事象完全連動画面） -->
+  <!-- ========================================== -->
+  <div id="textModeSection" class="app-layout" style="display: none;">
     <div class="sidebar">
       <div class="config-card">
         <div class="config-card-title">
@@ -554,7 +681,7 @@
 
 
   <!-- ========================================== -->
-  <!-- 2. 🏛️ Gem設計ビルダー 独立画面 -->
+  <!-- 4. 🏛️ Gem設計ビルダー 独立画面 -->
   <!-- ========================================== -->
   <div id="gemModeSection" style="display: none;">
     <div class="special-container card-gem-border">
@@ -619,135 +746,6 @@
     </div>
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- 3. 🎨 Canva画像生成（SNS推奨サイズ ＆ 最適用途） -->
-  <!-- ========================================== -->
-  <div id="canvaModeSection" style="display: none;">
-    <div class="special-container card-canva-border">
-      <div style="font-weight: 800; font-size: 1.15rem; color: #0f766e; margin-bottom: 12px;">
-        🎨 Canva専用 画像生成プロンプト（SNS推奨ピクセル解像度 ＆ 最適用途別スタイル）
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #99f6e4; display: flex; flex-direction: column; gap: 10px;">
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">① 描きたい被写体・シチュエーション（日本語入力）:</label>
-            <textarea id="canvaSubjectJa" style="height: 55px;" placeholder="例: カフェでノートPCを開いて作業する日本人女性、朝の光、モダンなインテリア..." oninput="onCanvaInputChanged()"></textarea>
-            <div style="display: flex; gap: 6px; margin-top: 4px;">
-              <button class="btn-verify" style="padding: 4px 10px; font-size: 0.75rem;" onclick="translateCanvaSubjectWithAi()">⚡ AIで被写体を英語化・最適化</button>
-              <span id="canvaTranslateStatus" style="font-size: 0.75rem; color: #0d9488; align-self: center;"></span>
-            </div>
-          </div>
-
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">② 英語被写体（直接編集・手動入力も即時反映）:</label>
-            <!-- 🌟 手動入力時も oninput で即座に連動 -->
-            <input type="text" id="canvaSubjectEn" placeholder="例: A Japanese businesswoman working on laptop in modern cafe" oninput="onCanvaManualEnglishInput()" style="border-color: #5eead4;">
-          </div>
-
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <label style="color: #0f766e; font-weight: 700; margin: 0;">③ 媒体・プラットフォーム構図（推奨サイズ）:</label>
-              <span id="canvaPlatformBadge" class="spec-badge"></span>
-            </div>
-            <select id="canvaPlatformSelect" onchange="buildCanvaOutput()"></select>
-          </div>
-
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">④ ライティング ＆ 質感・仕上がり:</label>
-            <select id="canvaLightingSelect" onchange="buildCanvaOutput()"></select>
-            <div class="info-desc" id="canvaLightingDesc" style="margin-top: 4px; border-left-color: #0d9488; font-size: 0.75rem;"></div>
-          </div>
-
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">⑤ 画風 ＆ アートスタイル（最適シーン表示）:</label>
-            <select id="canvaArtSelect" onchange="buildCanvaOutput()"></select>
-            <div class="info-desc" id="canvaArtDesc" style="margin-top: 4px; border-left-color: #0d9488; font-size: 0.75rem;"></div>
-          </div>
-        </div>
-
-        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #99f6e4; display: flex; flex-direction: column; gap: 10px;">
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">⑥ 設定内容の日本語プレビュー（解像度 ＋ 最適用途）:</label>
-            <textarea id="canvaJaPreview" style="height: 110px; background: #f8fafc; font-weight: 600;" readonly></textarea>
-          </div>
-
-          <div>
-            <label style="color: #0f766e; font-weight: 700;">⑦ Canva貼り付け用 英語プロンプト（完全最適化済み）:</label>
-            <textarea id="canvaEnOutput" style="height: 120px; background: #ffffff; border: 2px solid #0d9488; font-weight: 700; color: #042f2e;" readonly></textarea>
-          </div>
-
-          <button class="btn-canva" style="width: 100%; padding: 10px 0; font-size: 0.9rem;" onclick="copyCanvaOutput()">📋 Canva用 英語プロンプトをコピー</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ========================================== -->
-  <!-- 4. 🎬 動画生成（解像度 ＆ カメラ・照明・WB） -->
-  <!-- ========================================== -->
-  <div id="videoModeSection" style="display: none;">
-    <div class="special-container card-video-border">
-      <div style="font-weight: 800; font-size: 1.15rem; color: #9f1239; margin-bottom: 12px;">
-        🎬 動画生成 専用プロンプト（媒体推奨解像度 ＋ カメラ ＋ 照明/WB ＋ 質感）
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #fda4af; display: flex; flex-direction: column; gap: 10px;">
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">① 被写体・シーン（日本語入力）:</label>
-            <textarea id="videoSubjectJa" style="height: 55px;" placeholder="例: 雨の夜の街を歩くサイバーパンク風の人物、路面のネオン反射..." oninput="onVideoInputChanged()"></textarea>
-            <div style="display: flex; gap: 6px; margin-top: 4px;">
-              <button class="btn-verify" style="padding: 4px 10px; font-size: 0.75rem;" onclick="translateVideoSubjectWithAi()">⚡ AIで被写体を英語化・最適化</button>
-              <span id="videoTranslateStatus" style="font-size: 0.75rem; color: #e11d48; align-self: center;"></span>
-            </div>
-          </div>
-
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">② 英語被写体（直接編集・手動入力も即時反映）:</label>
-            <input type="text" id="videoSubjectEn" placeholder="例: A cyberpunk traveler walking through night rainy city" oninput="onVideoManualEnglishInput()" style="border-color: #fda4af;">
-          </div>
-
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-              <label style="color: #9f1239; font-weight: 700; margin: 0;">③ 媒体仕様 ＆ 推奨解像度:</label>
-              <span id="videoPlatformBadge" class="spec-badge" style="background-color: #ffe4e6; color: #9f1239;"></span>
-            </div>
-            <select id="videoPlatformSelect" onchange="buildVideoOutput()"></select>
-          </div>
-
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">④ カメラワーク ＆ モーション指定:</label>
-            <select id="videoCameraSelect" onchange="buildVideoOutput()"></select>
-            <div class="info-desc" id="videoCameraDesc" style="margin-top: 4px; border-left-color: #e11d48; font-size: 0.75rem;"></div>
-          </div>
-
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">⑤ ライティング ＆ ホワイトバランス（色温度）:</label>
-            <select id="videoLightingSelect" onchange="buildVideoOutput()"></select>
-            <div class="info-desc" id="videoLightingDesc" style="margin-top: 4px; border-left-color: #e11d48; font-size: 0.75rem;"></div>
-          </div>
-        </div>
-
-        <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #fda4af; display: flex; flex-direction: column; gap: 10px;">
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">⑥ 設定内容の日本語プレビュー:</label>
-            <textarea id="videoJaPreview" style="height: 110px; background: #f8fafc; font-weight: 600;" readonly></textarea>
-          </div>
-
-          <div>
-            <label style="color: #9f1239; font-weight: 700;">⑦ 動画生成AI用 英語プロンプト（Sora/Runway/Kling対応）:</label>
-            <textarea id="videoEnOutput" style="height: 120px; background: #ffffff; border: 2px solid #e11d48; font-weight: 700; color: #4c0519;" readonly></textarea>
-          </div>
-
-          <button class="btn-video" style="width: 100%; padding: 10px 0; font-size: 0.9rem;" onclick="copyVideoOutput()">📋 動画生成用 英語プロンプトをコピー</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
 
 <script>
@@ -792,6 +790,9 @@ window.onload = function() {
   initVideoCompositeSelects();
   onGemMajorChange2();
   buildFinalPrompt();
+  
+  // 初期画面としてCanvaを表示
+  switchAppMode('canva');
 };
 
 function onModelSelectChange() {
@@ -816,20 +817,14 @@ function getSelectedModelName() {
 }
 
 function switchAppMode(mode) {
-  const tabs = ["Text", "Gem", "Canva", "Video"];
+  const tabs = ["Canva", "Video", "Text", "Gem"];
   tabs.forEach(t => {
     document.getElementById(`tabBtn${t}`).className = "mode-tab-btn";
-    document.getElementById(`${t.toLowerCase()}ModeSection`).style.display = "none";
+    const sec = document.getElementById(`${t.toLowerCase()}ModeSection`);
+    if (sec) sec.style.display = "none";
   });
 
-  if (mode === "text") {
-    document.getElementById("tabBtnText").classList.add("active-text");
-    document.getElementById("textModeSection").style.display = "grid";
-  } else if (mode === "gem") {
-    document.getElementById("tabBtnGem").classList.add("active-gem");
-    document.getElementById("gemModeSection").style.display = "block";
-    onGemMajorChange2();
-  } else if (mode === "canva") {
+  if (mode === "canva") {
     document.getElementById("tabBtnCanva").classList.add("active-canva");
     document.getElementById("canvaModeSection").style.display = "block";
     buildCanvaOutput();
@@ -837,12 +832,17 @@ function switchAppMode(mode) {
     document.getElementById("tabBtnVideo").classList.add("active-video");
     document.getElementById("videoModeSection").style.display = "block";
     buildVideoOutput();
+  } else if (mode === "text") {
+    document.getElementById("tabBtnText").classList.add("active-text");
+    document.getElementById("textModeSection").style.display = "grid";
+  } else if (mode === "gem") {
+    document.getElementById("tabBtnGem").classList.add("active-gem");
+    document.getElementById("gemModeSection").style.display = "block";
+    onGemMajorChange2();
   }
 }
 
-/* ==========================================
-   Canva 専用ロジック
-========================================== */
+/* Canva 専用ロジック */
 function initCanvaCompositeSelects() {
   const platSel = document.getElementById("canvaPlatformSelect");
   const lightSel = document.getElementById("canvaLightingSelect");
@@ -873,10 +873,9 @@ function initCanvaCompositeSelects() {
     artSel.appendChild(opt);
   });
 
-  // 🌟 初期値（デフォルト）をノーマル・自然な状態に
-  platSel.selectedIndex = 0; // noteアイキャッチ
-  lightSel.selectedIndex = 0; // 指定なし（ノーマル）
-  artSel.selectedIndex = 0; // 指定なし（ノーマル）
+  platSel.selectedIndex = 0;
+  lightSel.selectedIndex = 0;
+  artSel.selectedIndex = 0;
 
   buildCanvaOutput();
 }
@@ -904,7 +903,7 @@ async function translateCanvaSubjectWithAi() {
   const status = document.getElementById("canvaTranslateStatus");
 
   if (!ja) { alert("先に日本語の被写体を入力してください。"); return; }
-  if (!apiKey) { alert("「思考プロンプト」タブでGemini APIキーを設定・保存してください。"); return; }
+  if (!apiKey) { alert("APIキーを設定・保存してください。"); return; }
 
   status.textContent = "AI翻訳中...";
   try {
@@ -966,10 +965,7 @@ function copyCanvaOutput() {
   });
 }
 
-
-/* ==========================================
-   動画生成 専用ロジック
-========================================== */
+/* 動画生成 専用ロジック */
 function initVideoCompositeSelects() {
   const platSel = document.getElementById("videoPlatformSelect");
   const camSel = document.getElementById("videoCameraSelect");
@@ -1092,10 +1088,7 @@ function copyVideoOutput() {
   });
 }
 
-
-/* ==========================================
-   Gem設計ビルダー 独立画面ロジック
-========================================== */
+/* Gem設計ビルダー ロジック */
 function onGemMajorChange2() {
   const major = document.getElementById("gemMajorSelect2").value;
   const minor = document.getElementById("gemMinorSelect2");
@@ -1140,10 +1133,7 @@ function onGemMinorChange2() {
   descBox.style.display = "block";
 }
 
-
-/* ==========================================
-   思考プロンプト（4事象・マップ同期）ロジック
-========================================== */
+/* 思考プロンプト ロジック */
 function updateUserNameInRules() {
   const name = document.getElementById("userNameInput").value.trim() || "主様";
   localStorage.setItem("saved_user_name", name);

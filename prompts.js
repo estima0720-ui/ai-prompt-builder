@@ -31,10 +31,8 @@ function generateSystemRules(userName) {
 
 // ==========================================
 // 🎨 Canva画像生成：多層コンポジット ライブラリ
-// （推奨ピクセルサイズ ＆ 最適用途を完全網羅）
 // ==========================================
 const canvaCompositeLibrary = {
-  // 1. 媒体・プラットフォーム構図（推奨ピクセル解像度）
   platforms: [
     {
       label: "📝 note記事見出し画像（1280 × 670 px / 1.91:1・三分割余白）",
@@ -94,7 +92,6 @@ const canvaCompositeLibrary = {
     }
   ],
 
-  // 2. ライティング・質感（用途・効果付き）
   lighting: [
     { label: "指定なし（ニュートラル・ノーマル）", desc: "AI標準の自然な陰影", enPrompt: "" },
     { label: "① 自然光・透明感（色味補正・クリア）", desc: "日常ブログ、美容・コスメ、清潔感重視に最適", enPrompt: ", bright natural daylight, crisp accurate white balance, soft diffused window light, no yellow tint, airy clean atmosphere, 8k" },
@@ -104,7 +101,6 @@ const canvaCompositeLibrary = {
     { label: "⑤ マット＆リアル質感（テカリ抑制・生々しさ）", desc: "服飾・インテリア、AI特有のプラスチック感を消したい時に最適", enPrompt: ", photorealistic matte texture, non-glossy, soft diffused illumination, natural skin and fabric textures, muted realistic colors" }
   ],
 
-  // 3. 画風・アートスタイル（最適用途・ベストマッチ付き）
   artStyles: [
     { label: "指定なし（ニュートラル・ノーマル）", bestFor: "標準のAI写真・素材生成", enPrompt: "" },
     { label: "① プロ実写写真（高精細リアリズム）", bestFor: "ブログサムネイル、Web広告、EC商品、人物紹介に最適", enPrompt: ", professional commercial photograph, ultra detailed, photorealistic, 8k resolution, crisp clean details" },
@@ -120,35 +116,51 @@ const canvaCompositeLibrary = {
 
 // ==========================================
 // 🎬 動画生成：多層コンポジット ライブラリ
+// （Canva公式準拠：1280×720 HD標準化版）
 // ==========================================
 const videoCompositeLibrary = {
   platforms: [
     {
-      label: "📱 TikTok / Shorts / Reels（1080 × 1920 px / 9:16 縦型）",
-      specTag: "縦型動画 (9:16)",
-      size: "1080 × 1920 px",
-      enPrompt: ", 9:16 vertical mobile aspect ratio, 1080x1920, full screen smartphone framing, dynamic center framing"
+      label: "🎬 Canva標準 / YouTube（1280 × 720 px / 16:9 HD公式仕様）",
+      specTag: "Canva公式 (720p HD)",
+      size: "1280 × 720 px",
+      enPrompt: ", 16:9 cinematic aspect ratio, 1280x720 HD resolution, clean high-definition video"
     },
     {
-      label: "▶️ YouTube / 映画・CM（1920 × 1080 px / 16:9 横型）",
-      specTag: "横型シネマ (16:9)",
-      size: "1920 × 1080 px",
-      enPrompt: ", 16:9 widescreen cinematic aspect ratio, 1920x1080, theatrical movie framing, horizontal composition"
+      label: "📱 TikTok / Shorts / Reels（1080 × 1920 px / 9:16 縦型）",
+      specTag: "縦型ショート (9:16)",
+      size: "1080 × 1920 px",
+      enPrompt: ", 9:16 vertical mobile aspect ratio, 1080x1920 resolution, full screen smartphone framing, dynamic center framing"
+    },
+    {
+      label: "📸 Instagram投稿 / スクエア（1080 × 1080 px / 1:1 正方形）",
+      specTag: "スクエア (1:1)",
+      size: "1080 × 1080 px",
+      enPrompt: ", 1:1 square aspect ratio, 1080x1080 resolution, centered composition"
+    },
+    {
+      label: "🎥 シネマスコープ（3840 × 1600 px / 2.39:1 映画比率）",
+      specTag: "映画比率 (2.39:1)",
+      size: "3840 × 1600 px",
+      enPrompt: ", ultra-wide 2.39:1 cinematic aspect ratio, 4K resolution, anamorphic lens flare"
     }
   ],
 
   cameras: [
     { label: "① スロードリー・イン（前進・映画的没入感）", desc: "被写体へゆっくり前進しドラマチックに引き込みます", enPrompt: ", slow cinematic dolly-in shot moving towards subject, 35mm lens, smooth tracking, shallow depth of field, 24fps" },
     { label: "② ドローン空撮・オービット旋回（壮大・立体感）", desc: "被写体の周囲を360度滑らかに旋回し空間を描きます", enPrompt: ", aerial drone orbit shot, 360 degree smooth rotation around subject, wide angle lens, high altitude perspective, 60fps" },
-    { label: "③ 追従トラッキングショット（躍動感・追従）", desc: "移動する被写体に一定距離で滑らかに追従します", enPrompt: ", smooth tracking follow shot, steadycam movement, natural motion blur, subject in dynamic motion, 4k ultra realistic" },
-    { label: "④ 固定・微細モーション（静寂・高品位）", desc: "カメラを固定し風や光の微細な変化だけを捉えます", enPrompt: ", locked-off tripod shot, subtle ambient micro-movements, wind blowing, calm meditative atmosphere" }
+    { label: "③ リビール・ショット（前景越し・劇的な出現）", desc: "壁・柱・木・暗がりなどの前景越しに被写体がドラマチックに出現します", enPrompt: ", dramatic cinematic reveal shot moving smoothly from behind foreground object, gradually revealing the main subject, depth of field" },
+    { label: "④ パン / チルト・視線誘導（広がり・上下パノラマ）", desc: "滑らかな水平・垂直移動で広大な風景や全体像を捉えます", enPrompt: ", smooth panoramic pan and tilt camera movement, expansive wide angle view, stabilized tracking" },
+    { label: "⑤ 追従トラッキングショット（躍動感・アクション）", desc: "移動する被写体に一定距離で滑らかに並走・追従します", enPrompt: ", smooth tracking follow shot, steadycam movement, natural motion blur, subject in dynamic motion, 4k ultra realistic" },
+    { label: "⑥ 固定・微細モーション（静寂・高品位）", desc: "カメラを三脚固定し風や光の微細な変化だけを捉えます", enPrompt: ", locked-off tripod shot, subtle ambient micro-movements, wind blowing, calm meditative atmosphere" }
   ],
 
   lighting: [
     { label: "A. 昼光ノーマル（5600K・自然な発色）", desc: "標準の昼光色。忠実でクリアな発色", enPrompt: ", daylight 5600K white balance, neutral color grading, crisp natural lighting, soft fill light" },
     { label: "B. ゴールデンアワー（3200K・夕暮れ暖色グロー）", desc: "夕暮れの温かい太陽光と逆光のリムライト", enPrompt: ", golden hour sunset lighting, warm 3200K color temperature, cinematic amber backlight, volumetric sunbeams" },
     { label: "C. クールシネマティック（6500K・寒色ブルー）", desc: "静謐・SF・ミステリアスな青みの陰影", enPrompt: ", cool 6500K color temperature, moody blue shadows, teal and orange color grading, soft diffusion" },
-    { label: "D. ネオンサイバーパンク（高彩度・夜間発光）", desc: "夜の街のネオンと濡れた路面の反射光", enPrompt: ", vibrant neon lighting, high contrast night scene, pink and cyan rim lights, wet surface reflections" }
+    { label: "D. ネオンサイバーパンク（高彩度・夜間発光）", desc: "夜の街のネオンと濡れた路面の反射光", enPrompt: ", vibrant neon lighting, high contrast night scene, pink and cyan rim lights, wet surface reflections" },
+    { label: "E. スタジオ・ソフトボックス（均一商業クオリティ）", desc: "影を抑えたプロ仕様の明るくクリアな照明", enPrompt: ", professional studio softbox lighting, perfectly balanced exposure, clean commercial look, crisp sharp focus" }
   ]
 };
 
@@ -182,7 +194,7 @@ const fourQuadrantsPromptData = {
     {
       label: "禁断の真実解読モード（綺麗事抜きの実利戦略）",
       desc: "業界の利権構造やトップ層の裏ルールと逆転戦略を暴露形式で出力します。",
-      prompt: `あなたは表には出ない禁断の知識を解読する専門AIです。\n根拠のない陰謀論は完全排除し、現実世界で100%再現可能な生きた知識として綺麗事抜きで提示してください。\n\n【必須出力項目】\n1. 初心者が洗脳されている綺麗事と間違った常識\n2. トップ層だけがコッソリ共有してる本当のルール\n3. 世間の主流な意見とは真逆を行くリアルな事実\n4. なぜその有益な情報が世に出回らないのか（利権や構造）\n5. 今の状況を作り出した歴史的な裏背景\n6. 実際にあった生々しい成功・失敗の事例\n7. この真実を知った上で、今日から使える逆転戦略`,
+      prompt: `あなたは表には出ない禁断の知識を解読する専門AIです。\n根拠のない陰謀論は完全排除し、現実世界で100%再現可能な生きた知識として綺麗事抜きで提示してください。\n\n【必須出力項目】\n1. 初心者が洗脳されている綺麗事と間違った常シック\n2. トップ層だけがコッソリ共有してる本当のルール\n3. 世間の主流な意見とは真逆を行くリアルな事実\n4. なぜその有益な情報が世に出回らないのか（利権や構造）\n5. 今の状況を作り出した歴史的な裏背景\n6. 実際にあった生々しい成功・失敗の事例\n7. この真実を知った上で、今日から使える逆転戦略`,
       x: 70, y: 85
     },
     {
@@ -216,7 +228,6 @@ const fourQuadrantsPromptData = {
 
 // ==========================================
 // 🏛️ 13部署・全46人 Gemデータベース
-// （全13部署を集約した超巨大ワンストップGem搭載）
 // ==========================================
 const gemHierarchicalData = {
   pipeline: [
