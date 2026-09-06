@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIプロンプト ビルダー ＆ リアルタイム検証ツール</title>
+  <link rel="icon" href="aitool.png" type="image/png">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --canva-color: #00c4cc;
+      --canva-hover: #009aa0;
+      --gem-btn: #0284c7;
+      --gem-hover: #0369a1;
+      --verify-btn: #7c3aed;
+      --verify-hover: #6d28d9;
+      --save-btn: #d97706;
+      --save-hover: #b45309;
+      --delete-btn: #dc2626;
+      --delete-hover: #b91c1c;
+      --success: #16a34a;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #cbd5e1;
+      --text: #0f172a;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      margin: 0;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 1480px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    }
+
+    .header-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .header-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+    }
+
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      margin: 0;
+      color: #0f172a;
+      letter-spacing: 1px;
+    }
+
+    .app-layout {
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 1080px) {
+      .app-layout { grid-template-columns: 1fr; }
+    }
+
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
+    .main-area { display: flex; flex-direction: column; gap: 14px; }
+
+    .step-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      background-color: #ffffff;
+    }
+
+    .step-title {
+      font-weight: 700;
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-badge {
+      background-color: var(--primary);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 0.8rem; }
+    select, textarea, input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background-color: #fff;
+      font-size: 0.82rem;
+      color: var(--text);
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+
+    textarea { font-family: monospace; resize: vertical; }
+
+    .config-card {
+      background-color: #fefce8;
+      border: 1px solid #fde047;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .config-card-title {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #854d0e;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .gem-card {
+      background-color: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    /* 🌟 テーマ・対象入力の専用別枠カード */
+    .theme-input-card {
+      background-color: #f0fdf4;
+      border: 2px solid #86efac;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .theme-input-title {
+      font-weight: 700;
+      color: #166534;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step2-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.95fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .step2-grid { grid-template-columns: 1fr; }
+    }
+
+    .quadrant-container {
+      position: relative;
+      width: 100%;
+      height: 290px;
+      border: 2px solid #334155;
+      border-radius: 8px;
+      box-sizing: border-box;
+      overflow: hidden;
+      background-color: #ffffff;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(96, 165, 250, 0.55) 0px, transparent 65%),
+        radial-gradient(at 100% 0%, rgba(167, 139, 250, 0.55) 0px, transparent 65%),
+        radial-gradient(at 0% 100%, rgba(52, 211, 153, 0.55) 0px, transparent 65%),
+        radial-gradient(at 100% 100%, rgba(251, 113, 133, 0.55) 0px, transparent 65%);
+    }
+
+    .cross-v {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      background-color: #334155;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    .cross-h {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: #334155;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .q-label {
+      position: absolute;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(4px);
+      transition: transform 0.2s;
+      z-index: 2;
+    }
+    .q-label:hover { transform: scale(1.05); }
+
+    .q-label-fact { top: 6px; left: 6px; color: #1e40af; border: 1.5px solid #60a5fa; }
+    .q-label-thinking { top: 6px; right: 6px; color: #5b21b6; border: 1.5px solid #a78bfa; }
+    .q-label-mode { bottom: 6px; right: 6px; color: #9f1239; border: 1.5px solid #fb7185; }
+    .q-label-task { bottom: 6px; left: 6px; color: #065f46; border: 1.5px solid #34d399; }
+
+    .quadrant-point {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background-color: #ef4444;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #ef4444;
+      transform: translate(-50%, -50%);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: none;
+      z-index: 20;
+    }
+
+    .theme-thinking { background: #f5f3ff !important; border: 2px solid #7c3aed !important; }
+    .theme-mode { background: #fff1f2 !important; border: 2px solid #e11d48 !important; }
+    .theme-task { background: #ecfdf5 !important; border: 2px solid #059669 !important; }
+    .theme-custom { background: #fffbeb !important; border: 2px solid #d97706 !important; }
+
+    .cat-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .info-desc {
+      background-color: #f8fafc;
+      border-left: 4px solid var(--primary);
+      padding: 6px 10px;
+      border-radius: 0 6px 6px 0;
+      margin-top: 6px;
+      font-size: 0.78rem;
+      color: #334155;
+    }
+
+    .canva-box {
+      margin-top: 8px;
+      background-color: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 6px;
+      padding: 8px;
+      display: none;
+    }
+    .canva-box-title {
+      font-weight: 700;
+      color: #0f766e;
+      font-size: 0.78rem;
+      margin-bottom: 4px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn-main { background-color: var(--primary); color: white; }
+    .btn-main:hover { background-color: var(--primary-hover); }
+    .btn-canva { background-color: var(--canva-color); color: #042f2e; }
+    .btn-canva:hover { background-color: var(--canva-hover); color: white; }
+    .btn-gem { background-color: var(--gem-btn); color: white; }
+    .btn-gem:hover { background-color: var(--gem-hover); }
+    .btn-verify { background-color: var(--verify-btn); color: white; }
+    .btn-verify:hover { background-color: var(--verify-hover); }
+    .btn-save { background-color: var(--save-btn); color: white; }
+    .btn-save:hover { background-color: var(--save-hover); }
+    .btn-delete { background-color: var(--delete-btn); color: white; }
+    .btn-delete:hover { background-color: var(--delete-hover); }
+    .btn-sub { background-color: #64748b; color: white; }
+    .btn-sub:hover { background-color: #475569; }
+
+    .toast {
+      color: var(--success);
+      font-weight: 600;
+      font-size: 0.8rem;
+      align-self: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .toast.show { opacity: 1; }
+
+    .verify-result-box {
+      margin-top: 12px;
+      padding: 12px;
+      background-color: #faf5ff;
+      border: 1px solid #d8b4fe;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .verify-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .verify-result-title {
+      font-weight: 700;
+      color: #581c87;
+      font-size: 0.85rem;
+    }
+
+    .verify-content {
+      white-space: pre-wrap;
+      font-size: 0.82rem;
+      color: #1e293b;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #e9d5ff;
+    }
+
+    .loading {
+      color: var(--verify-btn);
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+  </style>
+
+  <!-- 🌟 外部プロンプト定義ファイル（13部署46人対応版） -->
+  <script src="prompts.js"></script>
+</head>
+<body>
+
+<div class="container">
+  
+  <!-- ヘッダー -->
+  <div class="header-area">
+    <img class="header-avatar" src="aitool.png" alt="AI" onerror="this.style.display='none'">
+    <h1>AIプロンプト ビルダー ＆ リアルタイム検証ツール</h1>
+  </div>
+
+  <!-- 全体2カラムレイアウト -->
+  <div class="app-layout">
+
+    <!-- 左サイドバー（設定 ＋ 標準指示 ＋ 13部署Gem設計） -->
+    <div class="sidebar">
+      
+      <!-- 呼称＆APIキー設定カード -->
+      <div class="config-card">
+        <div class="config-card-title">
+          <span>👤 呼称名・API設定</span>
+          <span id="apiStatusText" style="font-size: 0.75rem; font-weight: 600; color: #854d0e;"></span>
+        </div>
+        <div style="margin-bottom: 6px;">
+          <label style="font-size: 0.75rem; color: #854d0e; margin: 0;">AIからのユーザー呼称名:</label>
+          <input type="text" id="userNameInput" value="主様" style="padding: 4px 6px; font-size: 0.8rem;" oninput="updateUserNameInRules()">
+        </div>
+        <div style="margin-bottom: 6px;">
+          <label style="font-size: 0.75rem; color: #854d0e; margin: 0;">Gemini APIキー:</label>
+          <input type="password" id="apiKeyInput" placeholder="AQ.Ab... を入力" style="padding: 4px 6px; font-size: 0.8rem;">
+        </div>
+        <div style="margin-bottom: 6px;">
+          <select id="modelSelect" style="padding: 4px 6px; font-size: 0.8rem;">
+            <option value="gemini-2.5-flash-lite" selected>2.5 Flash-Lite (最速)</option>
+            <option value="gemini-2.5-flash">2.5 Flash (標準)</option>
+            <option value="gemini-2.5-pro">2.5 Pro (高推論)</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 4px;">
+          <button class="btn-save" style="flex: 1; padding: 4px 0; font-size: 0.75rem;" onclick="saveApiKey()">キー保存</button>
+          <button class="btn-delete" style="padding: 4px 8px; font-size: 0.75rem;" onclick="clearApiKey()">消去</button>
+        </div>
+      </div>
+
+      <!-- ① 基本動作ルール（標準指示） -->
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-badge">1</span> 基本動作ルール（標準指示）
+        </div>
+        <label for="systemInstructions" style="font-size: 0.75rem; color: #64748b;">全プロンプトの先頭に常時反映:</label>
+        <textarea id="systemInstructions" style="height: 95px; font-size: 0.78rem;" oninput="buildFinalPrompt()"></textarea>
+        
+        <div class="btn-group" style="margin-top: 6px;">
+          <button class="btn-save" style="padding: 4px 8px; font-size: 0.75rem;" onclick="saveSystemInstructions()">ルール保存</button>
+          <button class="btn-sub" style="padding: 4px 8px; font-size: 0.75rem;" onclick="resetSystemInstructions()">初期値</button>
+          <span class="toast" id="sysToastMsg">保存完了</span>
+        </div>
+      </div>
+
+      <!-- 🛠️ Gem設計ビルダー（参考図準拠：13部署46人対応） -->
+      <div class="gem-card">
+        <div style="font-weight: 700; color: #0369a1; font-size: 0.85rem; margin-bottom: 6px;">
+          🛠️ Gem設計ビルダー（13部署46人）
+        </div>
+        
+        <label style="font-size: 0.72rem; color: #0369a1; margin-top: 2px;">① 部署（大項目）:</label>
+        <select id="gemMajorSelect" style="font-size: 0.78rem; padding: 4px;" onchange="onGemMajorChange()">
+          <option value="">-- 部署を選択 --</option>
+          <option value="pipeline">⚡ 【全自動】仮想組織ワンストップGem</option>
+          <option value="kikaku">🏛️ 【経営企画部】（論点整理・代案・決裁）</option>
+          <option value="kanri">📊 【経営管理部】（採算・検算・危険）</option>
+          <option value="sales">🤝 【営業部】（商談準備・提案書・想定問答）</option>
+          <option value="marketing">📢 【マーケティング部】（集客・コンテンツ・反響）</option>
+          <option value="cs">🎧 【カスタマーサクセス部】（問い合わせ・離脱防止）</option>
+          <option value="production">🎨 【制作部】（執筆・動画・数表・スライド等）</option>
+          <option value="quality">🕵️ 【品質管理部】（裏取り・表記・反対視点）</option>
+          <option value="legal">⚖️ 【法務・情報管理部】（伏せ字・停止・出典管理）</option>
+          <option value="education">🎓 【教育部】（育成・定着・マニュアル）</option>
+          <option value="general">🏢 【総務部】（社内文書・手順書・議事録）</option>
+          <option value="hr">👥 【人事部】（採用・評価・相談役）</option>
+          <option value="ai_promote">⚡ 【AI推進部】（通訳・段取り・監査・納品）</option>
+          <option value="research">🔍 【調査部】（外部調査・社内調査・要約）</option>
+        </select>
+
+        <label style="font-size: 0.72rem; color: #0369a1; margin-top: 4px;">② 担当エージェント（個別社員）:</label>
+        <select id="gemMinorSelect" style="font-size: 0.78rem; padding: 4px;" onchange="onGemMinorChange()" disabled>
+          <option value="">-- 先に部署を選択 --</option>
+        </select>
+
+        <div id="gemFormArea" style="margin-top: 8px; display: none; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #bae6fd;">
+          <div style="margin-bottom: 4px;">
+            <label style="font-size: 0.72rem; color: #0369a1;">名前:</label>
+            <div style="display: flex; gap: 4px;">
+              <input type="text" id="gemNameInput" style="font-size: 0.75rem; padding: 3px;">
+              <button class="btn-gem" style="padding: 3px 6px; font-size: 0.7rem;" onclick="copyTextById('gemNameInput', '名前をコピーしました！')">コピー</button>
+            </div>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <label style="font-size: 0.72rem; color: #0369a1;">説明:</label>
+            <div style="display: flex; gap: 4px;">
+              <input type="text" id="gemDescInput" style="font-size: 0.75rem; padding: 3px;">
+              <button class="btn-gem" style="padding: 3px 6px; font-size: 0.7rem;" onclick="copyTextById('gemDescInput', '説明をコピーしました！')">コピー</button>
+            </div>
+          </div>
+          <div style="margin-bottom: 4px;">
+            <label style="font-size: 0.72rem; color: #0369a1;">カスタム指示:</label>
+            <textarea id="gemInstructionText" style="height: 75px; font-size: 0.72rem; margin-bottom: 4px;"></textarea>
+            <div style="display: flex; justify-content: space-between;">
+              <button class="btn-gem" style="padding: 3px 6px; font-size: 0.7rem;" onclick="copyTextById('gemInstructionText', 'カスタム指示をコピーしました！')">指示コピー</button>
+              <button class="btn-sub" style="padding: 3px 6px; font-size: 0.7rem;" onclick="openGeminiDirect()">💎 Gemini開く</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 右側メインエリア -->
+    <div class="main-area">
+      
+      <!-- ステップ2: 指示選択 ＆ プロンプト特性マップ -->
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-badge">2</span> 欲しい指示の選択 ＆ プロンプト特性マップ
+        </div>
+        
+        <div class="step2-grid">
+          <!-- 左：選択フォーム -->
+          <div>
+            <div style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                <label for="categorySelect" style="margin: 0;">大分類（マップ特性別）:</label>
+                <span id="catColorBadge" class="cat-badge" style="display:none;"></span>
+              </div>
+              <select id="categorySelect" onchange="onCategoryChange()">
+                <option value="">-- 用途を選択してください --</option>
+                <option value="custom" data-type="custom">★ マイ保存プロンプト（追加・AI改善案）</option>
+                <option value="single_s" data-type="thinking">【思考・検証】思考・壁打ち【Sランク：深層思考】</option>
+                <option value="single_a" data-type="thinking">【思考・実践】思考・壁打ち【Aランク：意思決定】</option>
+                <option value="single_b" data-type="task">【定型・整理】思考・壁打ち【Bランク：構造化・レビュー】</option>
+                <option value="mode" data-type="mode">【深層分析】深層分析（5大特化フレームワーク）</option>
+                <option value="ranking" data-type="task">【定型・実務】実務・逆算（目的別プロンプト 1位〜7位）</option>
+                <option value="image" data-type="task">【画像・Canva】画像生成（構図・質感 5選）</option>
+                <option value="video" data-type="mode">【動画生成】動画生成（カメラワーク・動作 3選）</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="subCategorySelect">個別指示・欲しい結果:</label>
+              <select id="subCategorySelect" onchange="onSubCategoryChange()" disabled>
+                <option value="">-- 先に大分類を選択してください --</option>
+              </select>
+            </div>
+
+            <div class="info-desc" id="infoBox" style="display: none;"></div>
+
+            <!-- Canva専用枠 -->
+            <div class="canva-box" id="canvaBox">
+              <div class="canva-box-title">🎨 Canva用 英語プロンプト抽出枠</div>
+              <textarea id="canvaPromptText" style="height: 45px; font-size: 0.8rem; margin-bottom: 4px;" readonly></textarea>
+              <button class="btn-canva" style="width: 100%; padding: 4px 0;" onclick="copyCanvaPrompt()">Canva用プロンプトのみコピー</button>
+            </div>
+          </div>
+
+          <!-- 右：4象限ポジショニングマップ -->
+          <div>
+            <label>プロンプトの特性マップ（4象限位置付け）:</label>
+            <div class="quadrant-container" id="quadrantContainer">
+              <div class="cross-v"></div>
+              <div class="cross-h"></div>
+
+              <div class="q-label q-label-fact" onclick="selectQuadrant('fact')">事実 (Fact/Truth)</div>
+              <div class="q-label q-label-thinking" onclick="selectQuadrant('thinking')">思考 (Thinking)</div>
+              <div class="q-label q-label-task" onclick="selectQuadrant('task')">定型・実務 (Task)</div>
+              <div class="q-label q-label-mode" onclick="selectQuadrant('mode')">分析モード (Mode)</div>
+
+              <div class="quadrant-point" id="quadrantPoint"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🌟 【依頼対象・テーマ入力】専用別枠カード -->
+      <div class="theme-input-card">
+        <div class="theme-input-title">
+          <span>🎯 【入力欄】実行対象・テーマ・依頼内容（自動注入枠）</span>
+        </div>
+        <textarea id="themeInput" style="height: 60px; font-size: 0.82rem;" placeholder="例：新商品のLP構成案、スティーブ・ジョブズ、2026年のAI教育トレンド など入力..." oninput="buildFinalPrompt()"></textarea>
+      </div>
+
+      <!-- ステップ3: 出力＆画面内AI検証 -->
+      <div class="step-box">
+        <div class="step-title">
+          <span class="step-badge">3</span> 完成プロンプト出力 ＆ リアルタイムAI検証
+        </div>
+        <label for="finalPrompt">完成プロンプト（基本動作ルール ＋ 指示 ＋ テーマ入力が自動結合）：</label>
+        <textarea id="finalPrompt" style="height: 160px;"></textarea>
+
+        <div class="btn-group">
+          <button class="btn-main" onclick="copyFinalPrompt()">完成プロンプトをコピー</button>
+          <button class="btn-verify" onclick="runAiVerification()">このプロンプトをAIで直接検証する</button>
+          <button class="btn-save" onclick="saveAsCustomPrompt(false)">この内容をマイプロンプトに保存</button>
+          <button class="btn-delete" onclick="resetAllPresets()">全設定を初期化</button>
+          <span class="toast" id="toastMsg">コピー完了！</span>
+        </div>
+
+        <!-- AI検証結果の表示欄 -->
+        <div class="verify-result-box" id="verifyResultBox">
+          <div class="verify-header">
+            <div class="verify-result-title">AIによるプロンプト検証・添削結果</div>
+          </div>
+          <div id="verifyStatus" class="loading" style="display: none;">AIがプロンプトを検証中...</div>
+          <div class="verify-content" id="verifyContent"></div>
+
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button class="btn-save" onclick="saveAsCustomPrompt(true)">✨ AIの検証・改善結果をマイプロンプトに保存</button>
+            <button class="btn-main" onclick="applyAiResultToEditor()">⚡ この改善案をプロンプト編集欄に反映する</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let currentSelectedPrompt = "";
+
+window.onload = function() {
+  const savedKey = localStorage.getItem("gemini_api_key");
+  if (savedKey) {
+    document.getElementById("apiKeyInput").value = savedKey;
+    document.getElementById("apiStatusText").textContent = "⚡ 適用中";
+  }
+
+  const savedUser = localStorage.getItem("saved_user_name");
+  if (savedUser) {
+    document.getElementById("userNameInput").value = savedUser;
+  }
+
+  const savedSys = localStorage.getItem("saved_system_rules");
+  const userName = document.getElementById("userNameInput").value.trim() || "主様";
+  document.getElementById("systemInstructions").value = savedSys ? savedSys : generateSystemRules(userName);
+  buildFinalPrompt();
+};
+
+function updateUserNameInRules() {
+  const name = document.getElementById("userNameInput").value.trim() || "主様";
+  localStorage.setItem("saved_user_name", name);
+  document.getElementById("systemInstructions").value = generateSystemRules(name);
+  buildFinalPrompt();
+}
+
+function saveSystemInstructions() {
+  const text = document.getElementById("systemInstructions").value;
+  localStorage.setItem("saved_system_rules", text);
+  const toast = document.getElementById("sysToastMsg");
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2000);
+}
+
+function resetSystemInstructions() {
+  if (confirm("標準ルールを初期値に戻しますか？")) {
+    const name = document.getElementById("userNameInput").value.trim() || "主様";
+    document.getElementById("systemInstructions").value = generateSystemRules(name);
+    localStorage.removeItem("saved_system_rules");
+    buildFinalPrompt();
+  }
+}
+
+function resetAllPresets() {
+  if (confirm("保存されたマイプロンプトや修正履歴をすべて削除し、初期状態に完全復元しますか？")) {
+    localStorage.removeItem("custom_prompts");
+    localStorage.removeItem("saved_system_rules");
+    localStorage.removeItem("saved_user_name");
+    document.getElementById("userNameInput").value = "主様";
+    document.getElementById("systemInstructions").value = generateSystemRules("主様");
+    document.getElementById("categorySelect").value = "";
+    document.getElementById("themeInput").value = "";
+    onCategoryChange();
+    buildFinalPrompt();
+    alert("初期状態に完全復元しました。");
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById("apiKeyInput").value.trim();
+  if (!key) { alert("APIキーを入力してください。"); return; }
+  localStorage.setItem("gemini_api_key", key);
+  document.getElementById("apiStatusText").textContent = "⚡ 保存完了";
+  setTimeout(() => { document.getElementById("apiStatusText").textContent = "⚡ 適用中"; }, 2000);
+}
+
+function clearApiKey() {
+  localStorage.removeItem("gemini_api_key");
+  document.getElementById("apiKeyInput").value = "";
+  document.getElementById("apiStatusText").textContent = "消去完了";
+}
+
+function getCustomPrompts() {
+  const data = localStorage.getItem("custom_prompts");
+  return data ? JSON.parse(data) : [];
+}
+
+function saveAsCustomPrompt(fromAiResult) {
+  let textToSave = "";
+  let defaultTitle = "";
+
+  if (fromAiResult) {
+    textToSave = document.getElementById("verifyContent").textContent.trim();
+    defaultTitle = "AI改善案_" + new Date().toLocaleDateString();
+  } else {
+    textToSave = document.getElementById("finalPrompt").value.trim();
+    defaultTitle = "マイ指示_" + new Date().toLocaleDateString();
+  }
+
+  if (!textToSave) { alert("保存する内容がありません。"); return; }
+
+  const title = prompt("このプロンプトの管理名を入力してください：", defaultTitle);
+  if (!title) return;
+
+  const list = getCustomPrompts();
+  list.unshift({
+    label: title,
+    desc: "ユーザー保存 / AI最適化プロンプト",
+    prompt: textToSave,
+    x: 50, y: 50
+  });
+
+  localStorage.setItem("custom_prompts", JSON.stringify(list));
+  alert(`「${title}」を保存しました！「★ マイ保存プロンプト」からいつでも呼び出せます。`);
+  
+  document.getElementById("categorySelect").value = "custom";
+  onCategoryChange();
+}
+
+function applyAiResultToEditor() {
+  const aiText = document.getElementById("verifyContent").textContent.trim();
+  if (!aiText) return;
+  document.getElementById("finalPrompt").value = aiText;
+  const toast = document.getElementById("toastMsg");
+  toast.textContent = "AI改善案を編集欄に反映しました！";
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
+
+function selectQuadrant(type) {
+  const catSelect = document.getElementById("categorySelect");
+  if (type === "thinking") {
+    catSelect.value = "single_s";
+  } else if (type === "mode") {
+    catSelect.value = "mode";
+  } else if (type === "task") {
+    catSelect.value = "ranking";
+  } else if (type === "fact") {
+    updatePlot(25, 25);
+    return;
+  }
+  onCategoryChange();
+
+  setTimeout(() => {
+    const subSelect = document.getElementById("subCategorySelect");
+    if (subSelect.options.length > 1) {
+      subSelect.value = subSelect.options[1].value;
+      onSubCategoryChange();
+    }
+  }, 50); 
+}
+
+function onCategoryChange() {
+  const catSelect = document.getElementById("categorySelect");
+  const cat = catSelect.value;
+  const subSelect = document.getElementById("subCategorySelect");
+  const infoBox = document.getElementById("infoBox");
+  const canvaBox = document.getElementById("canvaBox");
+  const badge = document.getElementById("catColorBadge");
+
+  subSelect.innerHTML = '<option value="">-- 指示を選択してください --</option>';
+  infoBox.style.display = "none";
+  canvaBox.style.display = "none";
+  currentSelectedPrompt = "";
+  buildFinalPrompt();
+
+  catSelect.className = "";
+  const selectedOpt = catSelect.options[catSelect.selectedIndex];
+  const type = selectedOpt ? selectedOpt.getAttribute("data-type") : null;
+
+  if (type === "thinking") {
+    catSelect.classList.add("theme-thinking");
+    badge.style.display = "inline-block";
+    badge.style.background = "#7c3aed";
+    badge.style.color = "#ffffff";
+    badge.textContent = "思考・自律領域 (Thinking)";
+  } else if (type === "mode") {
+    catSelect.classList.add("theme-mode");
+    badge.style.display = "inline-block";
+    badge.style.background = "#e11d48";
+    badge.style.color = "#ffffff";
+    badge.textContent = "深層分析領域 (Mode)";
+  } else if (type === "task") {
+    catSelect.classList.add("theme-task");
+    badge.style.display = "inline-block";
+    badge.style.background = "#059669";
+    badge.style.color = "#ffffff";
+    badge.textContent = "定型・実務領域 (Task)";
+  } else if (type === "custom") {
+    catSelect.classList.add("theme-custom");
+    badge.style.display = "inline-block";
+    badge.style.background = "#d97706";
+    badge.style.color = "#ffffff";
+    badge.textContent = "マイ保存領域 (Custom)";
+  } else {
+    badge.style.display = "none";
+  }
+
+  let list = [];
+  if (cat === "custom") {
+    list = getCustomPrompts();
+    if (list.length === 0) {
+      subSelect.innerHTML = '<option value="">(保存されたプロンプトはありません)</option>';
+      subSelect.disabled = true;
+      document.getElementById("quadrantPoint").style.display = "none";
+      return;
+    }
+  } else if (initialPromptData && initialPromptData[cat]) {
+    list = initialPromptData[cat];
+  } else {
+    subSelect.disabled = true;
+    document.getElementById("quadrantPoint").style.display = "none";
+    return;
+  }
+
+  list.forEach((item, index) => {
+    const opt = document.createElement("option");
+    opt.value = index;
+    opt.textContent = item.label;
+    subSelect.appendChild(opt);
+  });
+
+  subSelect.disabled = false;
+}
+
+function onSubCategoryChange() {
+  const cat = document.getElementById("categorySelect").value;
+  const index = document.getElementById("subCategorySelect").value;
+  const infoBox = document.getElementById("infoBox");
+  const canvaBox = document.getElementById("canvaBox");
+
+  let list = cat === "custom" ? getCustomPrompts() : (initialPromptData ? initialPromptData[cat] : []);
+
+  if (index === "" || !list || !list[index]) {
+    infoBox.style.display = "none";
+    canvaBox.style.display = "none";
+    currentSelectedPrompt = "";
+    document.getElementById("quadrantPoint").style.display = "none";
+    buildFinalPrompt();
+    return;
+  }
+
+  const selected = list[index];
+  infoBox.textContent = selected.desc;
+  infoBox.style.display = "block";
+  currentSelectedPrompt = selected.prompt;
+
+  if (cat === "image") {
+    canvaBox.style.display = "block";
+    document.getElementById("canvaPromptText").value = `【被写体・内容】${selected.prompt}`;
+  } else {
+    canvaBox.style.display = "none";
+  }
+
+  updatePlot(selected.x || 50, selected.y || 50);
+  buildFinalPrompt();
+}
+
+function updatePlot(x, y) {
+  const pt = document.getElementById("quadrantPoint");
+  pt.style.display = "block";
+  pt.style.left = x + "%";
+  pt.style.top = y + "%";
+}
+
+// 🌟 テーマ入力枠の値を動的にバインドして完成プロンプトを組み立てる
+function buildFinalPrompt() {
+  const sys = document.getElementById("systemInstructions").value.trim();
+  const theme = document.getElementById("themeInput").value.trim();
+  const out = document.getElementById("finalPrompt");
+  const cat = document.getElementById("categorySelect").value;
+
+  let headerRule = sys ? `【基本動作ルール】\n${sys}\n\n` : "";
+  let themeBlock = theme ? `\n\n【対象・テーマ・依頼内容】\n${theme}` : "";
+
+  if (!currentSelectedPrompt) {
+    out.value = sys ? `【基本動作ルール】\n${sys}${themeBlock}` : themeBlock.trim();
+    return;
+  }
+
+  if (cat === "image") {
+    out.value = `${headerRule}【依頼・画像生成指示】\n${theme ? theme : "【被写体・内容を入力】"}${currentSelectedPrompt}`;
+    return;
+  }
+  if (cat === "video") {
+    out.value = `${headerRule}【依頼・動画生成指示】\n${theme ? theme : "【動画の被写体・シチュエーションを入力】"}${currentSelectedPrompt}`;
+    return;
+  }
+
+  out.value = `${headerRule}【依頼・指示内容】\n${currentSelectedPrompt}${themeBlock}`;
+}
+
+function copyFinalPrompt() {
+  const finalPromptText = document.getElementById("finalPrompt").value;
+  if (!finalPromptText) return;
+  navigator.clipboard.writeText(finalPromptText).then(() => {
+    const toast = document.getElementById("toastMsg");
+    toast.textContent = "完成プロンプトをコピーしました！";
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+  });
+}
+
+function copyCanvaPrompt() {
+  const text = document.getElementById("canvaPromptText").value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Canva用プロンプトをコピーしました！Canvaの画像生成欄に貼り付けてください。");
+  });
+}
+
+function onGemMajorChange() {
+  const major = document.getElementById("gemMajorSelect").value;
+  const minorSelect = document.getElementById("gemMinorSelect");
+  const formArea = document.getElementById("gemFormArea");
+
+  minorSelect.innerHTML = '<option value="">-- 担当エージェントを選択 --</option>';
+  formArea.style.display = "none";
+  currentSelectedPrompt = "";
+  buildFinalPrompt();
+
+  if (!major || !gemHierarchicalData || !gemHierarchicalData[major]) {
+    minorSelect.disabled = true;
+    return;
+  }
+
+  const list = gemHierarchicalData[major];
+  list.forEach((item, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.textContent = item.name;
+    minorSelect.appendChild(opt);
+  });
+
+  minorSelect.disabled = false;
+}
+
+function onGemMinorChange() {
+  const major = document.getElementById("gemMajorSelect").value;
+  const minorIdx = document.getElementById("gemMinorSelect").value;
+  const formArea = document.getElementById("gemFormArea");
+
+  if (minorIdx === "" || !gemHierarchicalData || !gemHierarchicalData[major] || !gemHierarchicalData[major][minorIdx]) {
+    formArea.style.display = "none";
+    currentSelectedPrompt = "";
+    buildFinalPrompt();
+    return;
+  }
+
+  const item = gemHierarchicalData[major][minorIdx];
+  document.getElementById("gemNameInput").value = item.name;
+  document.getElementById("gemDescInput").value = item.desc;
+  document.getElementById("gemInstructionText").value = item.instruction;
+  formArea.style.display = "block";
+
+  currentSelectedPrompt = item.instruction;
+  buildFinalPrompt();
+}
+
+function copyTextById(elementId, successMsg) {
+  const elem = document.getElementById(elementId);
+  if (!elem || !elem.value) return;
+  navigator.clipboard.writeText(elem.value).then(() => {
+    alert(successMsg);
+  });
+}
+
+function openGeminiDirect() {
+  window.open("https://gemini.google.com/gems/create", "_blank");
+}
+
+async function requestGemini(model, apiKey, promptText) {
+  const systemInstruction = `あなたはプロンプトエンジニアリングの専門家です。
+提示されたプロンプトを分析し、以下の構成で出力してください：
+1. 曖昧な点・改善余地の指摘
+2. 完成度を高めたブラッシュアップ版プロンプト`;
+  
+  const userQuery = `以下のプロンプトを検証し、必要なら改善版を作成してください：\n\n${promptText}`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: `${systemInstruction}\n\n${userQuery}` }] }]
+    })
+  });
+
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message || JSON.stringify(data.error));
+  return data.candidates[0].content.parts[0].text;
+}
+
+async function runAiVerification() {
+  let apiKey = document.getElementById("apiKeyInput").value.trim();
+  let primaryModel = document.getElementById("modelSelect").value;
+  const promptText = document.getElementById("finalPrompt").value.trim();
+  const resultBox = document.getElementById("verifyResultBox");
+  const statusElem = document.getElementById("verifyStatus");
+  const contentElem = document.getElementById("verifyContent");
+
+  if (!apiKey) {
+    alert("上部の「Gemini APIキー」にキーを入力して「キー保存」を押してください。");
+    return;
+  }
+
+  if (!promptText) {
+    alert("検証対象のプロンプトがありません。");
+    return;
+  }
+
+  resultBox.style.display = "block";
+  statusElem.style.display = "block";
+  contentElem.textContent = "";
+
+  const candidateModels = [primaryModel, "gemini-2.5-flash-lite", "gemini-2.5-flash"];
+  const modelsToTry = [...new Set(candidateModels)];
+
+  let success = false;
+  let lastError = "";
+
+  for (const model of modelsToTry) {
+    try {
+      statusElem.textContent = `AI検証中 (${model})...`;
+      const responseText = await requestGemini(model, apiKey, promptText);
+      contentElem.textContent = responseText;
+      success = true;
+      break;
+    } catch (err) {
+      lastError = err.message;
+      if (err.message.includes("high demand") || err.message.includes("429") || err.message.includes("503")) {
+        continue;
+      } else {
+        break;
+      }
+    }
+  }
+
+  if (!success) {
+    contentElem.textContent = `通信エラーが発生しました: ${lastError}\n\n※Googleのサーバーが一時的に混雑しています。1分ほど置いて再度実行してください。`;
+  }
+
+  statusElem.style.display = "none";
+}
+</script>
+
+</body>
+</html>
